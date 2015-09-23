@@ -1,0 +1,22 @@
+#!/bin/bash
+
+echo ...Sourcing .git-ps1
+
+export GIT_PS1_SHOWDIRTYSTATE=true
+export GIT_PS1_SHOWUNTRACKEDFILES=true
+
+# PS1='\[\033[01;312m2\]\u@\h\[\033[00m\]:\[\033[01;33m\]\w\[\033[00m\]\[\033[01;31m\]$(__git_ps1 " {%s}")\[\033[00m\]\n\$ '
+
+function prompt_right() {
+echo -e "\033[01;36m$(__git_ps1 "%s")\033[0m"
+}
+
+function prompt_left() {
+  echo -e "\033[01;33m\w\033[0m"
+}
+
+function prompt() {
+  compensate=10
+  PS1=$(printf "%*s\r%s\n\$ " "$(($(tput cols)+${compensate}))" "$(prompt_right)" "$(prompt_left)")
+}
+PROMPT_COMMAND=prompt

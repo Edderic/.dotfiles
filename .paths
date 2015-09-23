@@ -1,0 +1,6 @@
+#!/bin/sh
+
+echo ...Sourcing .paths
+
+export DEV_PATH="$HOME/Developer"
+export LING_PATH="$DEV_PATH/Lingraphica"
