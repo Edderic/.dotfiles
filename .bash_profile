@@ -1,6 +1,12 @@
 # General
 
+export PATH="$HOME/.rbenv/bin:$PATH"
+export PATH="/Applications/Postgres.app/Contents/Versions/9.4/bin:$PATH"
+export PATH="/usr/local/Cellar/vim/7.4.488/bin:$PATH"
 export PATH="$HOME/.edderic-dotfiles/bin:$PATH"
+
+eval "$(rbenv init -)"
+
 source ~/.edderic-dotfiles/.aliases
 source ~/.edderic-dotfiles/.paths
 source ~/.edderic-dotfiles/.git-ps1
