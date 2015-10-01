@@ -1006,6 +1006,7 @@ augroup end
 " Javascript Filetype settings {{{
 augroup JavaScript
   autocmd!
+  autocmd Filetype javascript nnoremap <buffer> <Leader>db Odebugger<Esc>
   autocmd Filetype javascript nnoremap <buffer> <Leader>/ :call Comment("\/\/")<CR>
   autocmd Filetype javascript vnoremap <buffer> <Leader>/ :call Comment("\/\/")<CR>
   autocmd Filetype javascript inoremap <buffer> fu' function() {<CR>}<Esc>k2==f)i
