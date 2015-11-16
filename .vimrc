@@ -188,6 +188,11 @@ nmap <F8> :TagbarToggle<CR>
 " Manuals
 runtime! ftplugin/man.vim
 
+" Julia
+runtime macros/matchit.vim
+let g:latex_to_unicode_auto = 1
+
+
 " Remove whitespace
 nnoremap <Space>tw :%s/\s\+$//<CR>
 
@@ -535,6 +540,11 @@ nnoremap <leader>sb :!source ~/.bash_profile<cr>
 nnoremap <leader>eb :vsp ~/.bash_profile<cr>
 " }}}
 
+" edit pgit configuration file
+nnoremap <leader>ep :vsp ~/.pgit.rc.yml<cr>
+"
+
+
 " Git {{{
 nnoremap <Leader>gd :Gdiff<CR>
 nnoremap <Leader>gdc :Git diff --cached<CR>
@@ -670,6 +680,8 @@ nnoremap <Leader>cW viW"+y
 nnoremap <Leader>'l :call WrapLineWith("'", "'", "")<CR>
 
 nnoremap <Leader>'l+ :call WrapLineWith("'", "'", " \+")<CR>
+
+nnoremap <Leader>"l+ :call WrapLineWith('"', '"', " \+")<CR>
 
 " wrap a word under the cursor with single quotes.
 " nnoremap <Leader>'w viw<Esc>bi'<Esc>lea'
@@ -1047,6 +1059,9 @@ augroup JavaScript
 
   " console.log the line
   autocmd Filetype javascript nnoremap <buffer> <Leader>cl v^og_yg_a); <Esc>`<iconsole.log(<Esc>
+
+  " alert the line
+  autocmd Filetype javascript nnoremap <buffer> <Leader>al v^og_yg_a); <Esc>`<ialert(<Esc>
   " jQuery object shortcuts {{{
   autocmd Filetype javascript inoremap <buffer> $( $('')<Left><Left>
 
@@ -1068,6 +1083,7 @@ augroup Python
   autocmd!
   autocmd Filetype python vnoremap <buffer> <Leader>/ :call Comment("#")<CR>
   autocmd Filetype python nnoremap <buffer> <Leader>/ :call Comment("#")<CR>
+  autocmd Filetype python nnoremap <buffer> <Leader>p ^c$print "<Esc>p$a"<Esc>oprint <Esc>poprint "\n"<CR>
 augroup end
 " }}}
 
