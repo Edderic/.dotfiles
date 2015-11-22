@@ -1058,7 +1058,7 @@ augroup JavaScript
   autocmd Filetype javascript nnoremap <buffer> <Leader>clv viWyEa); <Esc>`<iconsole.log(': ' + <Esc>F:hp
 
   " console.log the line
-  autocmd Filetype javascript nnoremap <buffer> <Leader>cl v^og_yg_a); <Esc>`<iconsole.log(<Esc>
+  autocmd Filetype javascript nnoremap <buffer> <Leader>cl v^og_yg_a); <Esc>`<iconsole.log(<Esc>a"<Esc>pa", <Esc>
 
   " alert the line
   autocmd Filetype javascript nnoremap <buffer> <Leader>al v^og_yg_a); <Esc>`<ialert(<Esc>
