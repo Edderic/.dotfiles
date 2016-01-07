@@ -1,3 +1,5 @@
+set nocompatible
+
 " TODO {{{
 " - Go through all examples of Learn Vimscript the Hard Way
 
