@@ -1083,9 +1083,21 @@ augroup end
 " Python Filetype settings {{{
 augroup Python
   autocmd!
+  autocmd Filetype python nnoremap <buffer> <Leader>db Oimport pdb; pdb.set_trace()<Esc>
+  autocmd Filetype python nnoremap <buffer> <Leader>ddb :call Delete("import pdb; pdb.set_trace()")<CR>
+  autocmd Filetype python nnoremap <buffer> <Leader>tdb :call Toggle("import pdb; pdb.set_trace()")<CR>
+
+  " Add multi-line double-quote string literal
+  autocmd Filetype python nnoremap <buffer> <Leader>ml" o"""<CR><CR>"""<Up><Esc>A
+  " Add multi-line single-quote string literal
+  autocmd Filetype python nnoremap <buffer> <Leader>ml' o'''<CR><CR>'''<Up><Esc>A
+
   autocmd Filetype python vnoremap <buffer> <Leader>/ :call Comment("#")<CR>
   autocmd Filetype python nnoremap <buffer> <Leader>/ :call Comment("#")<CR>
   autocmd Filetype python nnoremap <buffer> <Leader>p ^c$print "<Esc>p$a"<Esc>oprint <Esc>poprint "\n"<CR>
+
+  autocmd Filetype python setlocal tabstop=8 expandtab softtabstop=4 shiftwidth=4
+  autocmd Filetype python nnoremap <buffer> <Leader>sc ifrom specter import Spec, expect<CR><CR>class (Spec):<Esc>6hi
 augroup end
 " }}}
 
