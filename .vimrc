@@ -216,6 +216,9 @@ nnoremap <Leader>bp :bp<cr>
 nnoremap <Leader>bn :bn<cr>
 nnoremap <Leader>ls :ls<cr>
 
+" toggle no wrap
+nnoremap <Leader>snw :set nowrap<cr>
+
 " navigate to a different window {{{
 nnoremap <C-Left> <C-w>h
 nnoremap <C-Right> <C-w>l
@@ -408,6 +411,12 @@ line_string = Vim::Buffer.current.line
 line = Line.new(line_string, start_tag, end_tag)
 
 Vim::Buffer.current.line = line.toggle_comment
+EOF
+endfunction
+
+function! JavaScriptBlockComment(...)
+ruby <<EOF
+# puts Vim::evaluate("'<")
 EOF
 endfunction
 
@@ -1062,6 +1071,9 @@ augroup JavaScript
   " console.log the line
   autocmd Filetype javascript nnoremap <buffer> <Leader>cl v^og_yg_a); <Esc>`<iconsole.log(<Esc>a"<Esc>pa", <Esc>
 
+  " Block commenting
+  autocmd Filetype javascript nnoremap <buffer> <Leader>b/ :call JavaScriptBlockComment()<CR>
+
   " alert the line
   autocmd Filetype javascript nnoremap <buffer> <Leader>al v^og_yg_a); <Esc>`<ialert(<Esc>
   " jQuery object shortcuts {{{
@@ -1097,7 +1109,23 @@ augroup Python
   autocmd Filetype python nnoremap <buffer> <Leader>p ^c$print "<Esc>p$a"<Esc>oprint <Esc>poprint "\n"<CR>
 
   autocmd Filetype python setlocal tabstop=8 expandtab softtabstop=4 shiftwidth=4
-  autocmd Filetype python nnoremap <buffer> <Leader>sc ifrom specter import Spec, expect<CR><CR>class (Spec):<Esc>6hi
+
+  " Run specter
+  autocmd Filetype python nnoremap <buffer> <Leader>tt :call VtrSendCommand('specter')<CR>
+
+  " create a class
+  autocmd Filetype python inoremap <buffer> cl' class ():<CR>def __init__(self):<Up><Esc>$F(i
+
+  " define a method
+  autocmd Filetype python inoremap <buffer> def' def (self):<Esc>F(i
+augroup end
+
+augroup PythonSpecter
+  autocmd!
+  autocmd BufNewFile,BufRead *spec.py inoremap <buffer> <Leader>sc from specter import Spec, expect<CR><CR>class (Spec):<Esc>6hi
+  autocmd BufNewFile,BufRead *spec.py inoremap <buffer> ex' expect().to.equal()<Esc>2F(a
+  autocmd BufNewFile,BufRead *spec.py inoremap <buffer> de' class (Spec):<Esc>F(i
+  autocmd BufNewFile,BufRead *spec.py inoremap <buffer> it' def (self):<Esc>F(i
 augroup end
 " }}}
 
