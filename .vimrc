@@ -1,30 +1,25 @@
 set nocompatible
 
-" TODO {{{
+" TODO {{''{
+" - fix spring/turn on off
+" - create a SQL runner
+"     - change a file
+"     - opens a buffer that has the output to the file
+" - easily create files that are under folders that don't exist yet (mkdir -p)
+" - DONE: Creating files when the parent folder does not even exist for tests. See 'mkdir -p'
+" - Copy relative filepath to buffer
+" - DONE: Open accompanying test
+" - Open accompanying source code
+" - Refresh buffers without many losing color-scheme
+"
+" - create folders
 " - Go through all examples of Learn Vimscript the Hard Way
 
 " - Suggest branch deletion to vim figutive
 "
-" - Build app that helps teachers get answers from students in real time
-"   - teachers can post a question
-"   - students can write/type their answers
-"   - only the teacher can see the answers in aggregate form
-"   - prevents vocal students from dominating answers?
-"   - gives quiet students chance to give their input
-"   - gives teachers a better sense of the capabilities of each student
-"
 " - Write more operator-pending mappings (i.e. next function, describe, it,
 "   etc.)
 " - Install syntastic checkers (Ruby, Arduino, HTML, CSS, SASS)
-"
-" - Cucumber
-"   - Highlight steps that are in the cucumber file
-"   - Be able to 'Step into' the cucumber step
-"     - Goes to the line of the file that has that step
-" - Wrap lines with single-quotes/double-quotes
-" - Replace a set of wrappers with another
-" - Backbone-js shortcuts
-"   - Creating models, views, routers, templates
 "
 " - vim-jasmine
 "   - run test under cursor
@@ -99,7 +94,7 @@ Plugin 'tpope/vim-markdown'
 Plugin 'tpope/vim-surround'
 Plugin 'thoughtbot/vim-rspec'
 Plugin 'mattn/emmet-vim'
-Plugin 'kien/ctrlp.vim'
+Plugin 'ctrlpvim/ctrlp.vim'
 Plugin 'rking/ag.vim'
 Plugin 'skwp/greplace.vim'
 Plugin 'kchmck/vim-coffee-script'
@@ -108,6 +103,7 @@ Plugin 'AndrewRadev/vim-eco'
 Plugin 'scrooloose/syntastic'
 Plugin 'JuliaLang/julia-vim'
 Plugin 'jvirtanen/vim-octave'
+Plugin 'lervag/vimtex'
 
 
 " Layout Balancing"{{{
@@ -178,6 +174,8 @@ nnoremap <F2> :set invpaste paste?<CR>
 set pastetoggle=<F2>
 set showmode
 
+nnoremap <Leader>fp :let @" = expand("%")<cr>
+
 " move current buffer to different path
 nnoremap <leader>mv :call RenameFile()<CR>
 
@@ -211,6 +209,9 @@ set undofile
 " autosave when you lose focus
 au FocusLost * :wa
 
+" Copy whole file and go back to section
+nnoremap <Leader>yf :%y+<cr>
+
 " buffer shortcuts
 nnoremap <Leader>bp :bp<cr>
 nnoremap <Leader>bn :bn<cr>
@@ -218,6 +219,9 @@ nnoremap <Leader>ls :ls<cr>
 
 " toggle no wrap
 nnoremap <Leader>snw :set nowrap<cr>
+
+" generate spec
+nnoremap <Leader>gf :call GenerateFilePair()<cr>
 
 " navigate to a different window {{{
 nnoremap <C-Left> <C-w>h
@@ -269,12 +273,78 @@ nnoremap <leader>sc :call Scratch()<CR>
 ruby <<EOF
 EOF
 "endfunction
+"
+function! RunSqlFile()
+ruby <<EOF
+def run_sql_file
+  relative_path = Vim.evaluate('@%')
+  database = 'lingolive'
 
+  output =  `psql -d #{database} -f #{relative_path}`
+end
+
+def run_and_display_sql
+  Vim.command(':w')
+
+  # save the file
+  File.open('sql_buffer_output', 'wb') do |f|
+    f.write run_sql_file
+  end
+
+  # Open vertical split
+  Vim.command(':bdelete sql_buffer_output')
+  Vim.command(':vsp sql_buffer_output')
+end
+
+run_and_display_sql
+EOF
+endfunction
+
+function! GenerateFilePair()
+ruby <<EOF
+
+relative_path = Vim.evaluate('@%')
+
+def transform_to_spec_path(path)
+  dir_args = path.split('/')
+
+  spec_args = dir_args.clone()
+  spec_args[0] = 'spec'
+  last = dir_args.last.split('.')
+
+  spec_args[spec_args.size - 1] = "#{last.first}_spec.#{last.last}"
+  spec_args_without_file = spec_args[0...spec_args.size - 1]
+
+  Vim.command(":!mkdir -p #{spec_args_without_file.join('/')}")
+  Vim.command(":vsp #{spec_args.join('/')}")
+end
+
+transform_to_spec_path(relative_path)
+# puts
+EOF
+endfunction
 " Send a subset (command) of one line
 function! VtrSendVisuallySelectedCommand()
 ruby <<EOF
 command = Vim.evaluate("getline(\"'<\")[getpos(\"'<\")[2]-1:getpos(\"'>\")[2]-1]")
 Vim.command("call VtrSendCommand('#{command}')")
+EOF
+endfunction
+
+" Useful for debugging
+function! AddPryToEachMethod()
+ruby <<EOF
+  index = 1
+  while index < Vim::Buffer.current.length
+    line = Vim::Buffer.current[index]
+    if line.scan(/def +/).any?
+      pre_def_whitespace = line.scan(/\s+(?=def )/)[0]
+      debug_line = "#{pre_def_whitespace}  require pry; binding.pry"
+      Vim::Buffer.current.append(index, debug_line)
+    end
+
+    index += 1
+  end
 EOF
 endfunction
 
@@ -299,7 +369,60 @@ function! RunRSpecDirOfCurrentBuffer()
 ruby <<EOF
 old_path = Vim::Buffer.current.name
 directory = File.dirname(old_path)
+# Vim.command("call VtrSendCommand('spring rspec #{directory}')")
 Vim.command("call VtrSendCommand('rspec #{directory}')")
+EOF
+endfunction
+
+function! ToggleSpringRspec()
+ruby <<EOF
+require 'json'
+
+filename = '.edderic-config.json'
+
+def maybe_create_then_read_config(filename)
+  File.open(filename, 'a')
+  file = File.read(filename)
+  JSON.parse(file)
+rescue Exception => e
+  config = { 'spring_rspec': false }
+
+  File.open(filename, 'a') do |f|
+    # probably good if we just have a template file that we copy from
+    f.write(JSON.pretty_generate(config))
+  end
+
+  config
+end
+
+config = maybe_create_then_read_config(filename)
+new_config = config.clone
+new_val = !config['spring_rspec']
+
+# puts "Setting spring to #{new_val}"
+new_config['spring_rspec'] = new_val
+puts new_config
+File.open(filename, 'w') do |f|
+  f.write(JSON.pretty_generate(new_config))
+end
+
+if new_val
+  Vim.command("let g:rspec_command = \"call VtrSendCommand('spring rspec {spec}')\"")
+else
+  Vim.command("let g:rspec_command = \"call VtrSendCommand('rspec {spec}')\"")
+end
+
+EOF
+endfunction
+
+function! KillSpring()
+ruby <<EOF
+t = `ps aux |grep spring`
+puts t.
+  split("\n").
+  reject{|i| i.scan(/grep/).any? }.
+  map{|col| col.split(" ")[1]}.
+  each{|id| `kill -9 #{id}`}
 EOF
 endfunction
 
@@ -779,10 +902,29 @@ onoremap il{ :<C-u>normal! F}va{<Cr>
 " }}}
 " }}}
 
+"
+nnoremap <Leader>cr :!ctags --recurse .<cr>
+
+" Open playground
+nnoremap <Leader>pl :tabe playground.sql<CR>
+
+nnoremap <Leader>ks :call KillSpring()<CR>
+
+augroup SQL
+  autocmd!
+  autocmd Filetype sql nnoremap <buffer> <Leader>q :call RunSqlFile()<CR>
+  autocmd Filetype sql nnoremap <buffer> <Leader>/ :call Comment("--")<CR>
+  autocmd Filetype sql vnoremap <buffer> <Leader>/ :call Comment("--")<CR>
+  autocmd Filetype sql nnoremap <buffer> <Leader>* i/*<CR>*/<Esc>O
+
+augroup end
+
 " Testing{{{
 
 " rspec.vim mappings {{{
+" let g:rspec_command = "call VtrSendCommand('spring rspec {spec}')"
 let g:rspec_command = "call VtrSendCommand('rspec {spec}')"
+nnoremap <Leader>sr :call ToggleSpringRspec()<CR>
 nnoremap <Leader>td :call RunRSpecDirOfCurrentBuffer()<CR>
 
 nnoremap <Leader>tt :call RunCurrentSpecFile()<CR>
@@ -1118,11 +1260,16 @@ augroup Python
 
   " define a method
   autocmd Filetype python inoremap <buffer> def' def (self):<Esc>F(i
+
+  " if-statement
+  autocmd Filetype python inoremap <buffer> if' if<Space>:<Left>
+
+  " try-except
+  autocmd Filetype python inoremap <buffer> tr' try<Space>:<CR>except<Space>(Exception):<Esc>O
 augroup end
 
 augroup PythonSpecter
   autocmd!
-  autocmd BufNewFile,BufRead *spec.py inoremap <buffer> <Leader>sc from specter import Spec, expect<CR><CR>class (Spec):<Esc>6hi
   autocmd BufNewFile,BufRead *spec.py inoremap <buffer> ex' expect().to.equal()<Esc>2F(a
   autocmd BufNewFile,BufRead *spec.py inoremap <buffer> de' class (Spec):<Esc>F(i
   autocmd BufNewFile,BufRead *spec.py inoremap <buffer> it' def (self):<Esc>F(i
@@ -1132,6 +1279,7 @@ augroup end
 " Ruby Filetype settings {{{
 augroup Ruby
   autocmd!
+  autocmd Filetype ruby nnoremap <buffer> <Leader>pm :call AddPryToEachMethod()<CR>
   autocmd Filetype ruby nnoremap <buffer> <Leader>oa :call OpenAssociatedFile()<CR>
   autocmd Filetype ruby nnoremap <buffer> <Leader>bmm Orequire 'benchmark'; puts Benchmark.measure {  }<Left><Left><Esc>
   autocmd Filetype ruby nnoremap <buffer> <Leader>sp Orequire 'stackprof'; StackProf.run(mode: :wall, out: 'tmp/.dump') {  }<Esc>F/a
@@ -1203,6 +1351,14 @@ augroup Ruby
   " require byebug
   autocmd Filetype ruby nnoremap <buffer> <Leader>bye Orequire 'byebug'; byebug<Esc>
 
+  " add benchmark ips
+  autocmd Filetype ruby inoremap <buffer> bm' Benchmark.ips<Space>do<Space><Bar>x<Bar><CR>end<Esc>Ox.report("")<Space>do<Esc>oend<Esc>k^f"a
+
+  " add report block
+  autocmd Filetype ruby inoremap <buffer> br' x.report("")<Space>do<Esc>oend<Esc>k^f"a
+
+  " add factory block (FactoryGirl)
+  autocmd Filetype ruby inoremap <buffer> fa' FactoryGirl.define<Space>do<CR>factory<Space>:<Space>do<CR>end<CR>end<Esc>2kf:a
 augroup end
 
 " }}}
@@ -1226,6 +1382,13 @@ augroup YAML_filetype_settings
   autocmd Filetype yaml vnoremap <buffer> <Leader>/ :call Comment("#")<CR>
 augroup end
 " }}}
+
+augroup Latex
+  autocmd!
+  autocmd Filetype tex inoremap <buffer> beg' \begin{math}<CR>\end{math}
+  autocmd Filetype tex inoremap <buffer> beq' \begin{equation}<CR>\end{equation}
+  autocmd Filetype tex inoremap <buffer> bea' \begin{align}<CR>\end{align}
+augroup end
 
 " Markdown filetype settings {{{
 augroup Markdown

@@ -1,8 +1,0 @@
-#!/bin/bash
-
-echo ...Sourcing .lingraphica-proj-aliases
-
-alias ewa='cd $LING_PATH/exercise-web-app'
-alias teo='cd $LING_PATH/Therapy-Exercises-Online'
-alias lee='cd $LING_PATH/Lingraphica-Exercise-Editor'
-alias ana='cd $LING_PATH/Analytics-Server'
