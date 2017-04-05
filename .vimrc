@@ -182,6 +182,9 @@ nnoremap <leader>mv :call RenameFile()<CR>
 " copy highlighted text
 vnoremap <Leader>cp "+y
 
+" copy paragraph to system buffer
+nnoremap <Leader>cp "*yap
+
 " tagbar mappings
 nmap <F8> :TagbarToggle<CR>
 
@@ -268,6 +271,11 @@ nnoremap Q :w<CR>
 nnoremap <leader>sc :call Scratch()<CR>
 "}}}
 
+" create new file same directory {{{
+nnoremap <leader>nfsd : Scratch()<CR>
+"}}}
+
+
 " Functions {{{
 "function! OpenTestOrSourceFile()
 ruby <<EOF
@@ -278,7 +286,16 @@ function! RunSqlFile()
 ruby <<EOF
 def run_sql_file
   relative_path = Vim.evaluate('@%')
-  database = 'lingolive'
+
+  filename = '.edderic-config.json'
+  require File.expand_path("~/.edderic-dotfiles/lib/config.rb", __FILE__)
+
+  config = Config.new.maybe_create_then_read_config(filename)
+  if config['psql_database']
+    database = config['psql_database']
+  else
+    database = 'lingolive'
+  end
 
   output =  `psql -d #{database} -f #{relative_path}`
 end
@@ -332,14 +349,14 @@ EOF
 endfunction
 
 " Useful for debugging
-function! AddPryToEachMethod()
+function! AddDebugLineToEachMethod()
 ruby <<EOF
   index = 1
   while index < Vim::Buffer.current.length
     line = Vim::Buffer.current[index]
     if line.scan(/def +/).any?
       pre_def_whitespace = line.scan(/\s+(?=def )/)[0]
-      debug_line = "#{pre_def_whitespace}  require pry; binding.pry"
+      debug_line = "#{pre_def_whitespace}  require 'pry'; binding.pry"
       Vim::Buffer.current.append(index, debug_line)
     end
 
@@ -374,28 +391,33 @@ Vim.command("call VtrSendCommand('rspec #{directory}')")
 EOF
 endfunction
 
+function! StartupSpringRSpec()
+ruby <<EOF
+require 'json'
+
+filename = '.edderic-config.json'
+require File.expand_path("~/.edderic-dotfiles/lib/config.rb", __FILE__)
+
+config = Config.new.maybe_create_then_read_config(filename)
+
+if config['spring_rspec']
+  Vim.command("let g:rspec_command = \"call VtrSendCommand('spring rspec {spec}')\"")
+else
+  Vim.command("let g:rspec_command = \"call VtrSendCommand('rspec {spec}')\"")
+end
+
+EOF
+endfunction
+
 function! ToggleSpringRspec()
 ruby <<EOF
 require 'json'
 
 filename = '.edderic-config.json'
+require File.expand_path("~/.edderic-dotfiles/lib/config.rb", __FILE__)
 
-def maybe_create_then_read_config(filename)
-  File.open(filename, 'a')
-  file = File.read(filename)
-  JSON.parse(file)
-rescue Exception => e
-  config = { 'spring_rspec': false }
 
-  File.open(filename, 'a') do |f|
-    # probably good if we just have a template file that we copy from
-    f.write(JSON.pretty_generate(config))
-  end
-
-  config
-end
-
-config = maybe_create_then_read_config(filename)
+config = Config.new.maybe_create_then_read_config(filename)
 new_config = config.clone
 new_val = !config['spring_rspec']
 
@@ -485,6 +507,24 @@ function! Stuff()
 ruby <<EOF
 require File.expand_path("~/.vim_ruby_helpers/Test.rb", __FILE__)
 puts Test.new.class
+EOF
+endfunction
+
+function! TestBaseName()
+ruby <<EOF
+  old_path = Vim::Buffer.current.name
+  directory = File.dirname(old_path)
+  command = ":e #{directory}/"
+  new_file_name = ruby_input(command)
+  # maybe add options here ()
+  new_path = "#{directory}/#{new_file_name}"
+  Vim.command(":e #{new_path}")
+
+#if File.directory?(old_path)
+  # then save here
+  #else
+  # then move up and save
+  #end
 EOF
 endfunction
 
@@ -910,20 +950,27 @@ nnoremap <Leader>pl :tabe playground.sql<CR>
 
 nnoremap <Leader>ks :call KillSpring()<CR>
 
+augroup JSX
+  autocmd!
+  autocmd BufNewFile,BufRead *.jsx nnoremap <buffer> <Leader>cla AReact.createClass({<CR>render: function() {<CR>}<CR>});<Up><Up><Esc>o
+augroup end
+
 augroup SQL
   autocmd!
   autocmd Filetype sql nnoremap <buffer> <Leader>q :call RunSqlFile()<CR>
   autocmd Filetype sql nnoremap <buffer> <Leader>/ :call Comment("--")<CR>
   autocmd Filetype sql vnoremap <buffer> <Leader>/ :call Comment("--")<CR>
   autocmd Filetype sql nnoremap <buffer> <Leader>* i/*<CR>*/<Esc>O
-
+  autocmd Filetype sql nnoremap <buffer> <Leader>tt :w<CR>:call VtrSendCommand('psql -d lingolive -f playground.sql')<CR>
+  autocmd Filetype sql nnoremap <buffer> <Leader>daf :0,$d<CR>a
 augroup end
 
 " Testing{{{
 
 " rspec.vim mappings {{{
 " let g:rspec_command = "call VtrSendCommand('spring rspec {spec}')"
-let g:rspec_command = "call VtrSendCommand('rspec {spec}')"
+" let g:rspec_command = "call VtrSendCommand('rspec {spec}')"
+call StartupSpringRSpec()
 nnoremap <Leader>sr :call ToggleSpringRspec()<CR>
 nnoremap <Leader>td :call RunRSpecDirOfCurrentBuffer()<CR>
 
@@ -1009,7 +1056,7 @@ augroup RSpec
   autocmd!
   autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> de' describe '' do<CR>end<Esc>k2==f'li
   autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> co' context '' do<CR>end<Esc>k2==f'li
-  autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> it' it '' do<CR>end<Esc>k2==f'li
+  autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> it'' it '' do<CR>end<Esc>k2==f'li
   autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> sp' specify '' do<CR>end<Esc>k2==f'li
   autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> be' before {}<Esc>==f}i
   autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> bed' before do<CR>end<Esc>O
@@ -1279,14 +1326,18 @@ augroup end
 " Ruby Filetype settings {{{
 augroup Ruby
   autocmd!
-  autocmd Filetype ruby nnoremap <buffer> <Leader>pm :call AddPryToEachMethod()<CR>
   autocmd Filetype ruby nnoremap <buffer> <Leader>oa :call OpenAssociatedFile()<CR>
   autocmd Filetype ruby nnoremap <buffer> <Leader>bmm Orequire 'benchmark'; puts Benchmark.measure {  }<Left><Left><Esc>
   autocmd Filetype ruby nnoremap <buffer> <Leader>sp Orequire 'stackprof'; StackProf.run(mode: :wall, out: 'tmp/.dump') {  }<Esc>F/a
-  autocmd Filetype ruby nnoremap <buffer> <Leader>db :call Delete("require 'byebug'; byebug")<CR>
-  autocmd Filetype ruby nnoremap <buffer> <Leader>tb :call Toggle("require 'byebug'; byebug")<CR>
-  autocmd Filetype ruby nnoremap <buffer> <Leader>dp :call Delete("require 'pry'; binding.pry")<CR>
-  autocmd Filetype ruby nnoremap <buffer> <Leader>tp :call Toggle("require 'pry'; binding.pry")<CR>
+  " insert debugger to method
+  autocmd Filetype ruby nnoremap <buffer> <Leader>idl orequire 'pry'; binding.pry<Esc>
+
+  " insert debugger to method
+  autocmd Filetype ruby nnoremap <buffer> <Leader>idm :call AddDebugLineToEachMethod()<CR>
+
+  " delete debugger from whole file
+  autocmd Filetype ruby nnoremap <buffer> <Leader>dd :call Delete("require 'pry'; binding.pry")<CR>
+  autocmd Filetype ruby nnoremap <buffer> <Leader>td :call Toggle("require 'pry'; binding.pry")<CR>
   autocmd Filetype ruby vnoremap <buffer> <Leader>/ :call Comment("#")<CR>
   autocmd Filetype ruby nnoremap <buffer> <Leader>/ :call Comment("#")<CR>
   " shortcut for module end
@@ -1352,13 +1403,17 @@ augroup Ruby
   autocmd Filetype ruby nnoremap <buffer> <Leader>bye Orequire 'byebug'; byebug<Esc>
 
   " add benchmark ips
-  autocmd Filetype ruby inoremap <buffer> bm' Benchmark.ips<Space>do<Space><Bar>x<Bar><CR>end<Esc>Ox.report("")<Space>do<Esc>oend<Esc>k^f"a
+  autocmd Filetype ruby nnoremap <buffer> <Leader>bm iBenchmark.ips<Space>do<Space><Bar>x<Bar><CR>end<Esc>Ox.report("")<Space>do<Esc>oend<Esc>k^f"a<Esc>
 
   " add report block
   autocmd Filetype ruby inoremap <buffer> br' x.report("")<Space>do<Esc>oend<Esc>k^f"a
 
   " add factory block (FactoryGirl)
   autocmd Filetype ruby inoremap <buffer> fa' FactoryGirl.define<Space>do<CR>factory<Space>:<Space>do<CR>end<CR>end<Esc>2kf:a
+
+  autocmd Filetype ruby nnoremap <buffer> <Leader>eq iActiveRecord::Base.connection.exec_query(<CR><<-SQL<CR><CR>SQL<CR>)<Esc>2kcc
+  autocmd Filetype ruby nnoremap <buffer> <Leader>fbs A.find_by_sql(<CR><<-SQL<CR><CR>SQL<CR>)<Esc>2kcc
+  autocmd Filetype ruby nnoremap <buffer> <Leader>sql o<<-SQL<CR><CR>SQL<Esc>ka
 augroup end
 
 " }}}
@@ -1385,9 +1440,9 @@ augroup end
 
 augroup Latex
   autocmd!
-  autocmd Filetype tex inoremap <buffer> beg' \begin{math}<CR>\end{math}
-  autocmd Filetype tex inoremap <buffer> beq' \begin{equation}<CR>\end{equation}
-  autocmd Filetype tex inoremap <buffer> bea' \begin{align}<CR>\end{align}
+  autocmd BufNewFile,BufRead *.tex inoremap <buffer> beg' \begin{math}<CR>\end{math}
+  autocmd BufNewFile,BufRead *.tex nnoremap <buffer> <Leader>be a\begin{equation}<CR>\begin{aligned}<CR>\end{aligned}<CR>\end{equation}<Esc>kO
+  autocmd BufNewFile,BufRead *.tex inoremap <buffer> bea' \begin{align}<CR>\end{align}
 augroup end
 
 " Markdown filetype settings {{{
@@ -1528,6 +1583,7 @@ augroup HTML_ERB_filetype
   autocmd!
   autocmd BufNewFile,BufRead *.html.erb nnoremap <buffer> <Leader>/ :call Comment("<!--", "-->")<CR>
   autocmd BufNewFile,BufRead *.html.erb vnoremap <buffer> <Leader>/ :call Comment("<!--", "-->")<CR>
+  autocmd BufNewFile,BufRead *.html.erb nnoremap <buffer> <Leader>rc cc<%= react_component  %><Left><Left><Left>
 augroup end
 " }}}
 
@@ -1597,6 +1653,12 @@ nnoremap <Leader>vpu :VtrSendCommand up<CR>
 nnoremap <Leader>vpd :VtrSendCommand down<CR>
 nnoremap <Leader>vpc :VtrSendCommand continue<CR>
 "}}}
+
+augroup ES6
+  autocmd!
+  autocmd BufNewFile,BufRead *.es6* inoremap <buffer> fu' () {<CR>}<Esc>O
+  autocmd BufNewFile,BufRead *.es6* nnoremap <buffer> <Leader>rcl ccclass extends React.Component { <CR>constructor(props) {<CR>super(props)<CR>}<CR>render () {<CR>return ()<CR>}<CR>}<Esc>?extends<CR>i
+augrou end
 
 
 " Nvim {{{
