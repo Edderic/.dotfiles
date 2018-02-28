@@ -4,7 +4,7 @@ class Config
     File.open(filename, 'a')
     file = File.read(filename)
     JSON.parse(file)
-  rescue Exception => e
+  rescue StandardError => e
     puts e
     config = { 'spring_rspec': false }
 
