@@ -1,4 +1,6 @@
 set nocompatible
+" http://vim.wikia.com/wiki/Mac_OS_X_clipboard_sharing
+" set clipboard=unnamed
 
 " TODO {{''{
 " - fix spring/turn on off
@@ -282,8 +284,11 @@ ruby <<EOF
 EOF
 "endfunction
 "
-function! RunSqlFile()
+function! RunSqlFile(...)
 ruby <<EOF
+split_or_tab = Vim::evaluate('a:1')
+
+
 def run_sql_file
   relative_path = Vim.evaluate('@%')
 
@@ -300,7 +305,7 @@ def run_sql_file
   output =  `psql -d #{database} -f #{relative_path}`
 end
 
-def run_and_display_sql
+def run_and_display_sql(split_or_tab)
   Vim.command(':w')
 
   # save the file
@@ -310,10 +315,14 @@ def run_and_display_sql
 
   # Open vertical split
   Vim.command(':bdelete sql_buffer_output')
-  Vim.command(':vsp sql_buffer_output')
+  if split_or_tab == 'split'
+    Vim.command(':vsp sql_buffer_output')
+  else
+    Vim.command(':tabe sql_buffer_output')
+  end
 end
 
-run_and_display_sql
+run_and_display_sql(split_or_tab)
 EOF
 endfunction
 
@@ -337,7 +346,6 @@ def transform_to_spec_path(path)
 end
 
 transform_to_spec_path(relative_path)
-# puts
 EOF
 endfunction
 " Send a subset (command) of one line
@@ -421,7 +429,6 @@ config = Config.new.maybe_create_then_read_config(filename)
 new_config = config.clone
 new_val = !config['spring_rspec']
 
-# puts "Setting spring to #{new_val}"
 new_config['spring_rspec'] = new_val
 puts new_config
 File.open(filename, 'w') do |f|
@@ -947,6 +954,9 @@ nnoremap <Leader>cr :!ctags --recurse .<cr>
 
 " Open playground
 nnoremap <Leader>pl :tabe playground.sql<CR>
+"
+"Open todo-list
+nnoremap <Leader>todo :vsp todo.markdown<CR>
 
 nnoremap <Leader>ks :call KillSpring()<CR>
 
@@ -957,12 +967,14 @@ augroup end
 
 augroup SQL
   autocmd!
-  autocmd Filetype sql nnoremap <buffer> <Leader>q :call RunSqlFile()<CR>
+  autocmd Filetype sql nnoremap <buffer> <Leader>q :call RunSqlFile('split')<CR>
+  autocmd Filetype sql nnoremap <buffer> <Leader>j :call RunSqlFile('tab')<CR>
   autocmd Filetype sql nnoremap <buffer> <Leader>/ :call Comment("--")<CR>
   autocmd Filetype sql vnoremap <buffer> <Leader>/ :call Comment("--")<CR>
   autocmd Filetype sql nnoremap <buffer> <Leader>* i/*<CR>*/<Esc>O
-  autocmd Filetype sql nnoremap <buffer> <Leader>tt :w<CR>:call VtrSendCommand('psql -d lingolive -f playground.sql')<CR>
+  autocmd Filetype sql nnoremap <buffer> <Leader>tt :w<CR>:call VtrSendCommand('psql -d lingolive_test -f playground.sql')<CR>
   autocmd Filetype sql nnoremap <buffer> <Leader>daf :0,$d<CR>a
+  autocmd Filetype sql nnoremap <buffer> <Leader>csv iCopy (select * from (<CR>)) to '' with csv header;<Esc>f(
 augroup end
 
 " Testing{{{
@@ -1441,7 +1453,6 @@ augroup end
 augroup Latex
   autocmd!
   autocmd BufNewFile,BufRead *.tex inoremap <buffer> beg' \begin{math}<CR>\end{math}
-  autocmd BufNewFile,BufRead *.tex nnoremap <buffer> <Leader>be a\begin{equation}<CR>\begin{aligned}<CR>\end{aligned}<CR>\end{equation}<Esc>kO
   autocmd BufNewFile,BufRead *.tex inoremap <buffer> bea' \begin{align}<CR>\end{align}
 augroup end
 
@@ -1495,10 +1506,12 @@ augroup Markdown
   autocmd Filetype markdown inoremap <buffer> <Leader>mi' \\(\\)<Left><Left><Left>
 
   " MathJax Equation
-  autocmd Filetype markdown inoremap <buffer> <Leader>me' $$<CR><CR>$$<Up>
+  autocmd Filetype markdown nnoremap <buffer> <Leader>$ $$<CR><CR>$$<Up>
 
+  " begin equation
+  autocmd BufNewFile,BufRead *.tex nnoremap <buffer> <Leader>be a\begin{equation}<CR>\begin{aligned}<CR>\end{aligned}<CR>\end{equation}<Esc>kO
   " MathJax align
-  autocmd Filetype markdown inoremap <buffer> <Leader>ma' \begin{align}<CR><CR>\end{align}<Up>
+  autocmd Filetype markdown nnoremap <buffer> <Leader>ba \begin{align}<CR><CR>\end{align}<Up>
 
   " MathJax Fraction
   autocmd Filetype markdown inoremap <buffer> <Leader>mf' \frac{}{}<Esc>F}i
@@ -1507,6 +1520,23 @@ augroup Markdown
   autocmd Filetype markdown setlocal foldlevelstart=0
 augroup end
 " }}}
+
+" Jupyter notebooks {{{
+augroup JupyterNotebook
+  autocmd!
+
+  " MathJax Equation
+  autocmd BufNewFile,BufRead *.ipynb nnoremap <buffer> <Leader>$ o"$$\n",<CR><CR>"$$\n"<Up>
+
+  " fraction
+  autocmd BufNewFile,BufRead *.ipynb nnoremap <buffer> <Leader>f i\\frac{}{}<Esc>F}i
+  " begin equation
+  autocmd BufNewFile,BufRead *.ipynb nnoremap <buffer> <Leader>be o"\\begin{equation}\n",<CR>"\\begin{aligned}\n",<CR>"\\end{aligned}\n",<CR>"\\end{equation}\n",<Esc>kO"\n",<Left><Left><Left>
+  " begin align"
+  autocmd BufNewFile,BufRead *.ipynb nnoremap <buffer> <Leader>ba o\begin{aligned}<CR><CR>\end{aligned}<Up>
+augroup end
+" }}}
+
 
 " Vimscript filetype settings {{{
 augroup VimFileType
