@@ -45,7 +45,7 @@ int main(int argc, char **argv) {
   if (openpty(&master, &slave, NULL, &tt, &win) == -1) err(1, "openpty");
 
   FILE *outfile = fopen("keylog_log", "w");
-  if (outfile == NULL) err(1, "outfile");
+  if (outfile == NULL) err(1, "keylog_log");
 
   struct termios rtt = tt;
   cfmakeraw(&rtt);

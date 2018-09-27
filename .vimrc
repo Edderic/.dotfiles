@@ -1,4 +1,5 @@
 set nocompatible
+" set rubydll=~/.rbenv/versions/2.3.6/lib/libruby.2.3.dylib
 " http://vim.wikia.com/wiki/Mac_OS_X_clipboard_sharing
 " set clipboard=unnamed
 
@@ -270,7 +271,8 @@ nnoremap Q :w<CR>
 " }}}
 
 " create a scratch buffer {{{
-nnoremap <leader>sc :call Scratch()<CR>
+nnoremap <Leader>sc :call Scratch()<CR>
+nnoremap <Leader>sm :call ScratchMarkdown()<CR>
 "}}}
 
 " create new file same directory {{{
@@ -348,6 +350,7 @@ end
 transform_to_spec_path(relative_path)
 EOF
 endfunction
+
 " Send a subset (command) of one line
 function! VtrSendVisuallySelectedCommand()
 ruby <<EOF
@@ -394,8 +397,8 @@ function! RunRSpecDirOfCurrentBuffer()
 ruby <<EOF
 old_path = Vim::Buffer.current.name
 directory = File.dirname(old_path)
-# Vim.command("call VtrSendCommand('spring rspec #{directory}')")
-Vim.command("call VtrSendCommand('rspec #{directory}')")
+Vim.command("call VtrSendCommand('spring rspec #{directory}')")
+# Vim.command("call VtrSendCommand('rspec #{directory}')")
 EOF
 endfunction
 
@@ -496,6 +499,14 @@ call DefRuby()
 
 function! Scratch()
   :new<CR>
+  setlocal buftype=nofile
+  setlocal bufhidden=hide
+  setlocal noswapfile
+endfunction
+
+function! ScratchMarkdown()
+  :new<CR>
+  setlocal filetype=Markdown
   setlocal buftype=nofile
   setlocal bufhidden=hide
   setlocal noswapfile
@@ -965,6 +976,14 @@ augroup JSX
   autocmd BufNewFile,BufRead *.jsx nnoremap <buffer> <Leader>cla AReact.createClass({<CR>render: function() {<CR>}<CR>});<Up><Up><Esc>o
 augroup end
 
+augroup Arduino
+  autocmd!
+  autocmd BufNewFile,BufRead *.ino,*.h,*.cpp nnoremap <buffer> <Leader>/ :call Comment("//")<CR>
+  autocmd BufNewFile,BufRead *.ino,*.h,*.cpp nnoremap <buffer> <Leader>hg i#ifndef <CR>#define<CR>#include<CR>#endif<Up><Up><Up><Esc>A
+  autocmd BufNewFile,BufRead *.ino,*.h,*.cpp nnoremap <buffer> <Leader>p ^v$yOstd::cout << "<Esc>pA" << std::endl;<Esc>^
+  autocmd BufNewFile,BufRead *.ino,*.h,*.cpp nnoremap <buffer> <Leader>fo ifor(int i = 0; i < ; i++) {<CR>}<Esc>==<Up>2f;i
+augroup end
+
 augroup SQL
   autocmd!
   autocmd Filetype sql nnoremap <buffer> <Leader>q :call RunSqlFile('split')<CR>
@@ -972,7 +991,7 @@ augroup SQL
   autocmd Filetype sql nnoremap <buffer> <Leader>/ :call Comment("--")<CR>
   autocmd Filetype sql vnoremap <buffer> <Leader>/ :call Comment("--")<CR>
   autocmd Filetype sql nnoremap <buffer> <Leader>* i/*<CR>*/<Esc>O
-  autocmd Filetype sql nnoremap <buffer> <Leader>tt :w<CR>:call VtrSendCommand('psql -d lingolive_test -f playground.sql')<CR>
+  autocmd Filetype sql nnoremap <buffer> <Leader>tt :w<CR>:call VtrSendCommand('psql -d lingolive -f sql/playground/ls-consultations.sql')<CR>
   autocmd Filetype sql nnoremap <buffer> <Leader>daf :0,$d<CR>a
   autocmd Filetype sql nnoremap <buffer> <Leader>csv iCopy (select * from (<CR>)) to '' with csv header;<Esc>f(
 augroup end
@@ -1079,6 +1098,8 @@ augroup RSpec
   autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> exhw' expect().to have_received().with()<Esc>==f)i
   autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> ex{' expect{}.to<Esc>==f}i
 
+  " shortcut for let
+  autocmd BufNewFile,BufRead *spec.rb nnoremap <buffer> le ilet(:)<Space>do<CR><CR>end<CR><Esc>3k3==^f:a
   autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> ar' allow().to receive()<Esc>==f)i
   autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> arr' allow().to receive().and_return()<Esc>==f)i
 
@@ -1506,10 +1527,21 @@ augroup Markdown
   autocmd Filetype markdown inoremap <buffer> <Leader>mi' \\(\\)<Left><Left><Left>
 
   " MathJax Equation
-  autocmd Filetype markdown nnoremap <buffer> <Leader>$ $$<CR><CR>$$<Up>
+  autocmd Filetype markdown nnoremap <buffer> <Leader>$ a$$<CR><CR>$$<Up>
+
+  " MathJax Equation
+  autocmd Filetype markdown nnoremap <buffer> <Leader>be a\begin{equation}<CR>\begin{aligned}<CR>\end{aligned}<CR>\end{equation}<Esc>kO
+
+  " Text
+  autocmd Filetype markdown nnoremap <buffer> <Leader>t a\text{}<Left>
+
+  " Add new space inside equation
+  autocmd Filetype markdown nnoremap <buffer> <Leader>\ A\\
+
 
   " begin equation
   autocmd BufNewFile,BufRead *.tex nnoremap <buffer> <Leader>be a\begin{equation}<CR>\begin{aligned}<CR>\end{aligned}<CR>\end{equation}<Esc>kO
+
   " MathJax align
   autocmd Filetype markdown nnoremap <buffer> <Leader>ba \begin{align}<CR><CR>\end{align}<Up>
 
