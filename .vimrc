@@ -1,3 +1,4 @@
+" set nowrap
 set nocompatible
 " set rubydll=~/.rbenv/versions/2.3.6/lib/libruby.2.3.dylib
 " http://vim.wikia.com/wiki/Mac_OS_X_clipboard_sharing
@@ -100,12 +101,10 @@ Plugin 'mattn/emmet-vim'
 Plugin 'ctrlpvim/ctrlp.vim'
 Plugin 'rking/ag.vim'
 Plugin 'skwp/greplace.vim'
-Plugin 'kchmck/vim-coffee-script'
 Plugin 'majutsushi/tagbar'
 Plugin 'AndrewRadev/vim-eco'
 Plugin 'scrooloose/syntastic'
 Plugin 'JuliaLang/julia-vim'
-Plugin 'jvirtanen/vim-octave'
 Plugin 'lervag/vimtex'
 
 
@@ -991,7 +990,7 @@ augroup SQL
   autocmd Filetype sql nnoremap <buffer> <Leader>/ :call Comment("--")<CR>
   autocmd Filetype sql vnoremap <buffer> <Leader>/ :call Comment("--")<CR>
   autocmd Filetype sql nnoremap <buffer> <Leader>* i/*<CR>*/<Esc>O
-  autocmd Filetype sql nnoremap <buffer> <Leader>tt :w<CR>:call VtrSendCommand('psql -d lingolive -f sql/playground/ls-consultations.sql')<CR>
+  autocmd Filetype sql nnoremap <buffer> <Leader>tt :w<CR>:call VtrSendCommand('psql -d lingolive -f sql/playground/playground.sql')<CR>
   autocmd Filetype sql nnoremap <buffer> <Leader>daf :0,$d<CR>a
   autocmd Filetype sql nnoremap <buffer> <Leader>csv iCopy (select * from (<CR>)) to '' with csv header;<Esc>f(
 augroup end
@@ -1348,11 +1347,16 @@ augroup Python
   autocmd Filetype python inoremap <buffer> tr' try<Space>:<CR>except<Space>(Exception):<Esc>O
 augroup end
 
-augroup PythonSpecter
+augroup Mamba
   autocmd!
-  autocmd BufNewFile,BufRead *spec.py inoremap <buffer> ex' expect().to.equal()<Esc>2F(a
-  autocmd BufNewFile,BufRead *spec.py inoremap <buffer> de' class (Spec):<Esc>F(i
-  autocmd BufNewFile,BufRead *spec.py inoremap <buffer> it' def (self):<Esc>F(i
+  autocmd BufNewFile,BufRead *spec.py nnoremap <buffer> <Leader>ass iassert<Space>
+  autocmd BufNewFile,BufRead *spec.py nnoremap <buffer> <Leader>des iwith<Space>description(''):<Esc>F'i
+  autocmd BufNewFile,BufRead *spec.py nnoremap <buffer> <Leader>con iwith<Space>context(''):<Esc>F'i
+  autocmd BufNewFile,BufRead *spec.py nnoremap <buffer> <Leader>it iwith<Space>it(''):<Esc>F'i
+  autocmd BufNewFile,BufRead *spec.py nnoremap <buffer> <Leader>bee iwith<Space>before.each:<CR>
+  autocmd BufNewFile,BufRead *spec.py nnoremap <buffer> <Leader>bea iwith<Space>before.all:<CR>
+  autocmd BufNewFile,BufRead *spec.py nnoremap <buffer> <Leader>ae iwith<Space>after.each:<CR>
+  autocmd BufNewFile,BufRead *spec.py nnoremap <buffer> <Leader>aa iwith<Space>after.all:<CR>
 augroup end
 " }}}
 
@@ -1668,7 +1672,14 @@ augroup end
 " }}}
 
 " Syntax Checking {{{
-  let g:syntastic_javascript_checkers = ['jshint']
+set statusline+=%#warningmsg#
+set statusline+=%{SyntasticStatuslineFlag()}
+set statusline+=%*
+
+let g:syntastic_always_populate_loc_list = 1
+let g:syntastic_auto_loc_list = 1
+let g:syntastic_check_on_open = 1
+let g:syntastic_javascript_checkers = ['jshint']
 " }}}
 
 " tmux {{{
