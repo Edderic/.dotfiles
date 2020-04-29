@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/zsh
 
 # Add this to your zshrc or bzshrc file
 not_inside_tmux() {
