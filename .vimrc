@@ -722,7 +722,7 @@ nnoremap <leader>cap ebgUl
 nnoremap <leader>v V`]
 
 " edit aliases
-nnoremap <leader>ea :vsp ~/.edderic-dotfiles/.aliases<cr>
+nnoremap <leader>ea :vsp $DOTFILES_PATH/.aliases<cr>
 
 " Source/edit vimrc, .bash_profile {{{
 " Source/edit vimrc
