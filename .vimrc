@@ -71,7 +71,7 @@ set nocompatible
 "     - binding.pry shortcut
 " }}}
 
-" Plugins {{{
+" Plugins {{{{{{
 " required
 filetype off
 syntax on
@@ -144,7 +144,7 @@ filetype plugin indent on    " required
 " see :h vundle for more details or wiki for faq
 " put your non-plugin stuff after this line
 " }}}
-
+"}}}
 " Faster Grepping. http://robots.thoughtbot.com/faster-grepping-in-vim {{{
 " The Silver Searcher
 if executable('ag')
@@ -185,6 +185,9 @@ nnoremap <leader>mv :call RenameFile()<CR>
 vnoremap <Leader>cp "+y
 
 " copy paragraph to system buffer
+nnoremap <Leader>pcp :let @+ = expand("%")<CR>
+
+" copy paragraph to system bufferr
 nnoremap <Leader>cp "*yap
 
 " tagbar mappings
@@ -294,7 +297,7 @@ def run_sql_file
   relative_path = Vim.evaluate('@%')
 
   filename = '.edderic-config.json'
-  require File.expand_path("~/.edderic-dotfiles/lib/config.rb", __FILE__)
+  require File.expand_path("#{ENV['DOTFILES_PATH']}/lib/config.rb", __FILE__)
 
   config = Config.new.maybe_create_then_read_config(filename)
   if config['psql_database']
@@ -406,7 +409,7 @@ ruby <<EOF
 require 'json'
 
 filename = '.edderic-config.json'
-require File.expand_path("~/.edderic-dotfiles/lib/config.rb", __FILE__)
+require File.expand_path("#{ENV['DOTFILES_PATH']}/lib/config.rb", __FILE__)
 
 config = Config.new.maybe_create_then_read_config(filename)
 
@@ -586,7 +589,7 @@ ruby <<EOF
 args_length = Vim::evaluate('a:0')
 start_tag = Vim::evaluate('a:1')
 end_tag = Vim::evaluate('a:2') if args_length == 2
-require File.expand_path("~/.edderic-dotfiles/lib/line", __FILE__)
+require File.expand_path("#{ENV['DOTFILES_PATH']}/lib/line", __FILE__)
 line_string = Vim::Buffer.current.line
 line = Line.new(line_string, start_tag, end_tag)
 
@@ -727,8 +730,8 @@ nnoremap <leader>sv :source $MYVIMRC<cr>
 nnoremap <leader>ev :tabe $MYVIMRC<CR>
 
 " Source/edit .bash_profile
-nnoremap <leader>sb :!source ~/.bash_profile<cr>
-nnoremap <leader>eb :vsp ~/.bash_profile<cr>
+nnoremap <leader>sb :!source ~/.zshrc<cr>
+nnoremap <leader>eb :vsp ~/.zshrc<cr>
 " }}}
 
 " edit pgit configuration file
@@ -960,7 +963,7 @@ onoremap il{ :<C-u>normal! F}va{<Cr>
 " }}}
 
 "
-nnoremap <Leader>cr :!ctags --recurse .<cr>
+nnoremap <Leader>cr :!ctags -R .<cr>
 
 " Open playground
 nnoremap <Leader>pl :tabe playground.sql<CR>
@@ -1084,12 +1087,12 @@ augroup end
 " RSpec Insert shortcuts {{{
 augroup RSpec
   autocmd!
-  autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> de' describe '' do<CR>end<Esc>k2==f'li
-  autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> co' context '' do<CR>end<Esc>k2==f'li
-  autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> it'' it '' do<CR>end<Esc>k2==f'li
-  autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> sp' specify '' do<CR>end<Esc>k2==f'li
-  autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> be' before {}<Esc>==f}i
-  autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> bed' before do<CR>end<Esc>O
+  autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> de' describe "" do<CR>end<Esc>k2==f"li
+  autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> co' context "" do<CR>end<Esc>k2==f"li
+  autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> it'' it "" do<CR>end<Esc>k2==f"li
+  autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> sp' specify "" do<CR>end<Esc>k2==f"li
+  autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> be' before(:each) {}<Esc>==f}i
+  autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> bed' before(:each) do<CR>end<Esc>O
   autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> ex' expect().to<Esc>==f)i
   autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> exs' page.execute_script()<Esc>==f)i
   autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> evs' page.evaluate_script()<Esc>==f)i
@@ -1107,13 +1110,13 @@ augroup RSpec
   autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> arwr' allow().to receive().with().and_return()<Esc>==f)i
 
   " double('') shortcut
-  autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> dou' double('')<left><left>
+  autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> dou' double("")<left><left>
 
   " instance_double('') shortcut
-  autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> idou' instance_double('')<left><left>
+  autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> idou' instance_double("")<left><left>
 
   " class_double('') shortcut
-  autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> cdou' class_double('')<left><left>
+  autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> cdou' class_double("")<left><left>
 augroup end
 
   " create shortcut
@@ -1676,10 +1679,14 @@ set statusline+=%#warningmsg#
 set statusline+=%{SyntasticStatuslineFlag()}
 set statusline+=%*
 
+let g:syntastic_javascript_checkers = ['jshint']
+let g:syntastic_vue_checkers = ['vue']
+let g:syntastic_vue_checkers = ['rubocop']
+
 let g:syntastic_always_populate_loc_list = 1
 let g:syntastic_auto_loc_list = 1
 let g:syntastic_check_on_open = 1
-let g:syntastic_javascript_checkers = ['jshint']
+let g:syntastic_check_on_wq = 1
 " }}}
 
 " tmux {{{
@@ -1731,7 +1738,7 @@ augroup ES6
   autocmd!
   autocmd BufNewFile,BufRead *.es6* inoremap <buffer> fu' () {<CR>}<Esc>O
   autocmd BufNewFile,BufRead *.es6* nnoremap <buffer> <Leader>rcl ccclass extends React.Component { <CR>constructor(props) {<CR>super(props)<CR>}<CR>render () {<CR>return ()<CR>}<CR>}<Esc>?extends<CR>i
-augrou end
+augroup end
 
 
 " Nvim {{{
