@@ -172,7 +172,7 @@ colorscheme vividchalk
 let mapleader = "\<Space>"
 
 " pasting from clipboard without mangling text
-nnoremap <F2> :set invpaste paste?<CR>
+nnoremap <Leader>pa :set invpaste paste?<CR>
 set pastetoggle=<F2>
 set showmode
 
@@ -1348,6 +1348,11 @@ augroup Python
 
   " try-except
   autocmd Filetype python inoremap <buffer> tr' try<Space>:<CR>except<Space>(Exception):<Esc>O
+augroup end
+
+augroup PyTest
+  autocmd!
+  autocmd BufNewFile,BufRead *test.py nnoremap <buffer> <Leader>fo O@pytest.mark.f<Esc>
 augroup end
 
 augroup Mamba
