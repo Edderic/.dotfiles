@@ -1231,6 +1231,22 @@ augroup JasmineJS
 augroup end
 " }}}
 
+augroup SCAD
+  autocmd!
+  autocmd BufNewFile,BufRead *.scad nnoremap <buffer> <Leader>cu icube([x,y,z]);<Esc>==
+  autocmd BufNewFile,BufRead *.scad nnoremap <buffer> <Leader>cy icylinder(h=x, r=y);<Esc>==
+  autocmd BufNewFile,BufRead *.scad nnoremap <buffer> <Leader>tr itranslate([x,y,z])<Space>{<CR><CR>}<Up><Up><Esc>3==
+  autocmd BufNewFile,BufRead *.scad nnoremap <buffer> <Leader>sp isphere(x);<Esc>==
+  autocmd BufNewFile,BufRead *.scad nnoremap <buffer> <Leader>co icolor([x,y,z])<Space><Esc>==
+  autocmd BufNewFile,BufRead *.scad nnoremap <buffer> <Leader>di idifference()<Space>{<CR><CR>}<Up><Up><Esc>3==
+  autocmd BufNewFile,BufRead *.scad nnoremap <buffer> <Leader>mo imodule w(q)<Space>{<CR><CR>}<Up><Up><Esc>3==
+  autocmd BufNewFile,BufRead *.scad nnoremap <buffer> <Leader>sc iscale(h,h,h)<Space>{<CR><CR>}<Up><Up><Esc>3==
+  autocmd BufNewFile,BufRead *.scad nnoremap <buffer> <Leader>in iintersection()<Space>{<CR><CR>}<Up><Up><Esc>3==
+  autocmd BufNewFile,BufRead *.scad nnoremap <buffer> <Leader>/ :call Comment("//")<CR>
+  autocmd BufNewFile,BufRead *.scad nnoremap <buffer> <Leader>inf iintersection_for([x:y])<Space>{<CR><CR>}<Up><Up><Esc>3==
+  autocmd BufNewFile,BufRead *.scad nnoremap <buffer> <Leader>ro irotate([x,y,z])<Esc>==
+augroup end
+
 " RSpec Insert shortcuts {{{
 augroup RSpec
   autocmd!
