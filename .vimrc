@@ -1120,6 +1120,145 @@ nnoremap <Leader>todo :vsp todo.markdown<CR>
 
 nnoremap <Leader>ks :call KillSpring()<CR>
 
+
+augroup RSpec
+  autocmd!
+  autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> de' describe "" do<CR>end<Esc>k2==f"li
+  autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> co' context "" do<CR>end<Esc>k2==f"li
+  autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> it'' it "" do<CR>end<Esc>k2==f"li
+  autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> sp' specify "" do<CR>end<Esc>k2==f"li
+  autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> be' before(:each) {}<Esc>==f}i
+  autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> bed' before(:each) do<CR>end<Esc>O
+  autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> ex' expect().to<Esc>==f)i
+  autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> exs' page.execute_script()<Esc>==f)i
+  autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> evs' page.evaluate_script()<Esc>==f)i
+  autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> exh' expect().to have_received()<Esc>==f)i
+  autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> exhw' expect().to have_received().with()<Esc>==f)i
+  autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> ex{' expect{}.to<Esc>==f}i
+
+  " shortcut for let
+  autocmd BufNewFile,BufRead *spec.rb nnoremap <buffer> le ilet(:)<Space>do<CR><CR>end<CR><Esc>3k3==^f:a
+  autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> ar' allow().to receive()<Esc>==f)i
+  autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> arr' allow().to receive().and_return()<Esc>==f)i
+
+  autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> arw' allow().to receive().with()<Esc>==f)i
+
+  autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> arwr' allow().to receive().with().and_return()<Esc>==f)i
+
+  " double('') shortcut
+  autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> dou' double("")<left><left>
+
+  " instance_double('') shortcut
+  autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> idou' instance_double("")<left><left>
+
+  " class_double('') shortcut
+  autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> cdou' class_double("")<left><left>
+
+  " create shortcut
+  autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> cr' create()<left>
+
+  " convert expect().to have_received to allow().to receive
+  autocmd BufNewFile,BufRead *spec.rb nnoremap <buffer> <Leader>ar /expect<CR>Ncwallow<Esc>/have_received<CR>cwreceive<Esc>
+
+  " convert expect().to have_received to allow().to receive
+  autocmd BufNewFile,BufRead *spec.rb nnoremap <buffer> <Leader>ex /allow<CR>Ncwexpect<Esc>/receive<CR>cwhave_received<Esc>
+augroup end
+
+augroup Ruby
+  autocmd!
+  autocmd Filetype Ruby nnoremap <buffer> <Leader>eai aeach<Space>do \|i\|<Enter>end<Esc><Up>2==o
+  autocmd Filetype Ruby nnoremap <buffer> <Leader>ea aeach<Space>do <Enter>end<Esc><Up>2==o
+  autocmd Filetype ruby nnoremap <buffer> <Leader>oa :call OpenAssociatedFile()<CR>
+  autocmd Filetype ruby nnoremap <buffer> <Leader>bmm Orequire 'benchmark'; puts Benchmark.measure {  }<Left><Left><Esc>
+  autocmd Filetype ruby nnoremap <buffer> <Leader>sp Orequire 'stackprof'; StackProf.run(mode: :wall, out: 'tmp/.dump') {  }<Esc>F/a
+  " insert debugger to method
+  autocmd Filetype ruby nnoremap <buffer> <Leader>idl orequire 'pry'; binding.pry<Esc>
+
+  " insert debugger to method
+  autocmd Filetype ruby nnoremap <buffer> <Leader>idm :call AddDebugLineToEachMethod()<CR>
+
+  " delete debugger from whole file
+  autocmd Filetype ruby nnoremap <buffer> <Leader>db idebugger<Esc>==
+  autocmd Filetype ruby nnoremap <buffer> <Leader>dd :call Delete("require 'pry'; binding.pry")<CR>
+  autocmd Filetype ruby nnoremap <buffer> <Leader>td :call Toggle("require 'pry'; binding.pry")<CR>
+  autocmd Filetype ruby vnoremap <buffer> <Leader>/ :call Comment("#")<CR>
+  autocmd Filetype ruby nnoremap <buffer> <Leader>/ :call Comment("#")<CR>
+  " shortcut for module end
+  autocmd Filetype ruby inoremap <buffer> mo' module <CR>end<Esc>kA
+  " shortcut for class end
+  autocmd Filetype ruby inoremap <buffer> cl' class <CR>end<Esc>kA
+  " shortcut for def end
+  autocmd Filetype ruby inoremap <buffer> def' def <CR>end<Esc>kA
+  " inline def; ;end
+  autocmd Filetype ruby inoremap <buffer> defi' def ; ;end<Esc>F;;i
+  " shortcut for string interpolation
+  autocmd Filetype ruby inoremap <buffer> #{ #{}<Left>
+  " wrap with string interpolation tag
+  autocmd Filetype ruby nnoremap <buffer> <Leader>#{ viW<Esc>a}<Esc>Bi#{<Esc>
+  " require shortcut
+  autocmd Filetype ruby inoremap <buffer> req' require ''<Left>
+  " require_relative shortcut
+  autocmd Filetype ruby inoremap <buffer> reqr' require_relative ''<Left>
+
+  " while loop
+  autocmd Filetype ruby inoremap <buffer> wh' while  do<CR>end<Esc>ke2<Right>i
+
+  " until loop
+  autocmd Filetype ruby inoremap <buffer> un' until  do<CR>end<Esc>ke2<Right>i
+
+  " do end block
+  autocmd Filetype ruby inoremap <buffer> do' do<CR>end<Esc>O
+
+  " do end block with block params
+  autocmd Filetype ruby inoremap <buffer> do<Bar>' do <Bar><Bar><CR>end<Esc>kf<Bar>a
+
+  " convert {} to do-end block while inside {}
+  autocmd Filetype ruby nnoremap <buffer> <Leader>doe :cal DoEndifyCurlyBraces()<CR>
+
+  " convert {| to {||}
+  autocmd Filetype ruby inoremap <buffer> {<Bar> {<Bar><Bar>}<Left><Left>
+
+  " debugging puts a variable
+  autocmd Filetype ruby nnoremap <buffer> <Leader>p v$<Left>o^yOputs ""<Esc>P<Down>^Iputs <Esc>
+
+  " if-else block
+  autocmd Filetype ruby inoremap <buffer> ifs' if <CR>else<CR>end<Up><Up><Esc>A
+
+  " if block
+  autocmd Filetype ruby inoremap <buffer> if' if <CR><CR>end<Up><Up><Esc>A
+
+  " else statement
+  autocmd Filetype ruby inoremap <buffer> el' else<Esc>==A<Space>
+
+  " when statement
+  autocmd Filetype ruby inoremap <buffer> wn' when<Esc>==A<Space>
+
+  " then statement
+  autocmd Filetype ruby inoremap <buffer> th' then<Space>
+
+  " case statement
+  autocmd Filetype ruby inoremap <buffer> ca' case <CR>end<Esc><Up>2==A
+
+  " require pry
+  autocmd Filetype ruby nnoremap <buffer> <Leader>pry Orequire 'pry'; binding.pry<Esc>
+
+  " require byebug
+  autocmd Filetype ruby nnoremap <buffer> <Leader>bye Orequire 'byebug'; byebug<Esc>
+
+  " add benchmark ips
+  autocmd Filetype ruby nnoremap <buffer> <Leader>bm iBenchmark.ips<Space>do<Space><Bar>x<Bar><CR>end<Esc>Ox.report("")<Space>do<Esc>oend<Esc>k^f"a<Esc>
+
+  " add report block
+  autocmd Filetype ruby inoremap <buffer> br' x.report("")<Space>do<Esc>oend<Esc>k^f"a
+
+  " add factory block (FactoryGirl)
+  autocmd Filetype ruby inoremap <buffer> fa' FactoryGirl.define<Space>do<CR>factory<Space>:<Space>do<CR>end<CR>end<Esc>2kf:a
+
+  autocmd Filetype ruby nnoremap <buffer> <Leader>eq iActiveRecord::Base.connection.exec_query(<CR><<-SQL<CR><CR>SQL<CR>)<Esc>2kcc
+  autocmd Filetype ruby nnoremap <buffer> <Leader>fbs A.find_by_sql(<CR><<-SQL<CR><CR>SQL<CR>)<Esc>2kcc
+  autocmd Filetype ruby nnoremap <buffer> <Leader>sql o<<-SQL<CR><CR>SQL<Esc>ka
+augroup end
+
 augroup JSX
   autocmd!
   autocmd BufNewFile,BufRead *.jsx nnoremap <buffer> <Leader>cla AReact.createClass({<CR>render: function() {<CR>}<CR>});<Up><Up><Esc>o
@@ -1170,6 +1309,23 @@ augroup JasmineCoffee
 augroup end
 " }}}
 
+" Javascript  Settings {{{
+augroup Javascript
+  autocmd!
+"
+  " jasmine content
+  autocmd BufNewFile,BufRead *.js nnoremap <buffer> <Leader>db idebugger;<Esc>==
+  autocmd BufNewFile,BufRead *.js inoremap <buffer> try' try {<CR>} catch(e) {<Enter>}<Up><Up><Esc>o
+  autocmd BufNewFile,BufRead *.js nnoremap <buffer> <Leader>cl caWconsole.log(``);<Esc>2F`pa:<Space>${}<Esc>P==
+  autocmd BufNewFile,BufRead *.js nnoremap <buffer> <Leader>/ :call Comment("\/\/")<CR>
+  autocmd BufNewFile,BufRead *.js inoremap <buffer> if' if () {<CR>}<Esc>k2==f)i
+  autocmd BufNewFile,BufRead *.js inoremap <buffer> ei' else if () {<CR>}<Esc>k2==f)i
+  autocmd BufNewFile,BufRead *.js inoremap <buffer> fu' function<Space>() {<CR>}<Esc>k2==f(i
+  autocmd BufNewFile,BufRead *.js nnoremap <buffer> <Leader>cla iclass  {<CR>constructor(x) {<CR>this.x = x;<CR>}<CR>};<Esc>?class<Enter>6==f{<Left>i
+
+augroup end
+" }}}
+"
 " Jasmine Javascript Spec Settings {{{
 augroup JasmineJS
   autocmd!
@@ -1224,6 +1380,8 @@ augroup JasmineJS
 
   autocmd BufNewFile,BufRead *Spec.js,*spec.js vnoremap <buffer> <Leader>it <Esc>`>o});<Esc>`<Oit('<Esc>maa', function() {<Esc>gg=G'af'a
 
+  autocmd BufNewFile,BufRead *Spec.js,*spec.js nnoremap <buffer> <Leader>/ :call Comment("\/\/")<CR>
+  autocmd BufNewFile,BufRead *Spec.js,*spec.js vnoremap <buffer> <Leader>/ :call Comment("\/\/")<CR>
   " extract the variable declarations right before the before block
   " You are inside the before block
   " Only moves the ones that start with var keyword
