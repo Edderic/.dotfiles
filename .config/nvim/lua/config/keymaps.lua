@@ -130,6 +130,10 @@ map("i", "<", insert_pair("<", ">"), opts)
 -- Quick exit from insert mode
 map("i", "jk", "<Esc>", opts)
 
+-- Quick exit from visual mode
+map("v", "<Leader>jk", "<Esc>", opts)
+map("x", "<Leader>jk", "<Esc>", opts)
+
 -- Copy file path to register
 map("n", "<Leader>yf", function()
   local file_path = vim.fn.expand("%:p")
