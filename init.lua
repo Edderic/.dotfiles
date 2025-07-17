@@ -114,20 +114,34 @@ end
 function _G.toggle_comment()
   local ft = vim.bo.filetype
   local comment = comment_strings[ft] or "#"
-
-  -- Get visual marks for selection
-  local start_mark = vim.api.nvim_buf_get_mark(0, "<")
-  local end_mark = vim.api.nvim_buf_get_mark(0, ">")
   local s, e
 
-  -- Check if we have valid visual marks (visual mode)
-  if start_mark[1] > 0 and end_mark[1] > 0 then
-    s = start_mark[1]
-    e = end_mark[1]
+  -- Check if were in visual mode by looking at the current mode
+  local mode = vim.fn.mode()
+  if mode == 'v' or mode == 'V' or mode == '' then
+    -- Visual mode - use visual marks
+    local start_mark = vim.api.nvim_buf_get_mark(0, '<')
+    local end_mark = vim.api.nvim_buf_get_mark(0, '>')
+    if start_mark[1] > 0 and end_mark[1] > 0 then
+      s = start_mark[1]
+      e = end_mark[1]
+    else
+      -- Fallback to current line if marks are invalid
+      s = vim.fn.line('.')
+      e = s
+    end
   else
-    -- Normal mode - just current line
-    s = vim.fn.line(".")
-    e = s
+    -- Normal mode - check for count prefix
+    local count = vim.v.count
+    if count > 0 then
+      -- Use count to determine range
+      s = vim.fn.line('.')
+      e = s + count - 1
+    else
+      -- Just current line
+      s = vim.fn.line('.')
+      e = s
+    end
   end
 
   -- Ensure s <= e
@@ -167,8 +181,8 @@ function _G.toggle_comment()
   -- Apply the changes
   vim.fn.setline(s, lines)
 
-  -- Restore visual selection if we had one
-  if start_mark[1] > 0 and end_mark[1] > 0 then
+  -- Restore visual selection if we were in visual mode
+  if mode == 'v' or mode == 'V' or mode == '' then
     vim.cmd("normal! gv")
   end
 end
