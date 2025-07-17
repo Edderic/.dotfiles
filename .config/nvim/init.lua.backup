@@ -1,0 +1,6 @@
+vim.cmd("source ~/.vimrc")
+
+vim.keymap.set('n', '<F2>', function()
+  vim.opt.paste = not vim.opt.paste:get()
+  print('Paste mode:', vim.opt.paste:get() and 'ON' or 'OFF')
+end)
