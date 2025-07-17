@@ -315,7 +315,7 @@ nnoremap \ :Ag<SPACE>--ignore="*data*" --ignore="tags"<Space>
 " General {{{
 " Erase all the autocommands
 
-colorscheme vividchalk
+" colorscheme vividchalk
 let mapleader = "\<Space>"
 
 " pasting from clipboard without mangling text

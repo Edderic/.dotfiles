@@ -2,6 +2,119 @@
 vim.g.loaded_ruby_provider = 0
 vim.cmd("source ~/.vimrc")
 
+-- Bootstrap lazy.nvim
+local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
+if not vim.loop.fs_stat(lazypath) then
+  vim.fn.system({
+    "git",
+    "clone",
+    "--filter=blob:none",
+    "https://github.com/folke/lazy.nvim.git",
+    "--branch=stable",
+    lazypath,
+  })
+end
+vim.opt.rtp:prepend(lazypath)
+
+-- Configure plugins
+require("lazy").setup({
+  -- Tokyo Night theme
+  {
+    "folke/tokyonight.nvim",
+    lazy = false,
+    priority = 1000,
+    opts = {
+      style = "storm", -- storm, moon, day
+      transparent = false,
+      terminal_colors = true,
+      styles = {
+        comments = { italic = true },
+        keywords = { italic = true },
+        functions = {},
+        variables = {},
+        sidebars = "dark",
+        floats = "dark",
+      },
+      sidebars = { "qf", "help", "terminal", "NvimTree" },
+      day_brightness = 0.3,
+      hide_inactive_statusline = false,
+      dim_inactive = false,
+      lualine_bold = false,
+    },
+  },
+  
+  -- Catppuccin theme (alternative)
+  {
+    "catppuccin/nvim",
+    name = "catppuccin",
+    lazy = false,
+    priority = 999,
+    opts = {
+      flavour = "mocha", -- latte, frappe, macchiato, mocha
+      background = { -- :h background
+        light = "latte",
+        dark = "mocha",
+      },
+      transparent_background = false,
+      show_end_of_buffer = false,
+      term_colors = false,
+      dim_inactive = {
+        enabled = false,
+        shade = "dark",
+        percentage = 0.15,
+      },
+      styles = {
+        comments = { "italic" },
+        conditionals = { "italic" },
+        loops = {},
+        functions = {},
+        keywords = {},
+        strings = {},
+        variables = {},
+        numbers = {},
+        booleans = {},
+        properties = {},
+        types = {},
+        operators = {},
+      },
+      integrations = {
+        aerial = true,
+        alpha = true,
+        cmp = true,
+        gitsigns = true,
+        illuminate = true,
+        indent_blankline = { enabled = true },
+        mason = true,
+        native_lsp = {
+          enabled = true,
+          virtual_text = {
+            errors = { "italic" },
+            hints = { "italic" },
+            warnings = { "italic" },
+            information = { "italic" },
+          },
+          underlines = {
+            errors = { "underline" },
+            hints = { "underline" },
+            warnings = { "underline" },
+            information = { "underline" },
+          },
+        },
+        notify = true,
+        neotree = true,
+        treesitter = true,
+        which_key = true,
+      },
+      color_overrides = {},
+      custom_highlights = {},
+    },
+  },
+})
+
+-- Set the default colorscheme (uncomment the one you prefer)
+vim.cmd("colorscheme tokyonight")
+-- vim.cmd("colorscheme catppuccin")
+
 -- Language-aware toggle comment function for Neovim
 local comment_strings = {
   python = "#",
@@ -207,17 +320,17 @@ end, {desc = "Edit init.lua"})
 function _G.run_rubocop_on_modified_files()
   -- Get the current working directory
   local cwd = vim.fn.getcwd()
-  
+
   -- Run git status to get modified files
   local git_status = vim.fn.system('git status --porcelain')
-  
+
   if vim.v.shell_error ~= 0 then
     vim.notify("Not in a git repository or git command failed", vim.log.levels.ERROR)
     return
   end
-  
+
   local ruby_files = {}
-  
+
   -- Parse git status output to find modified Ruby files
   for line in git_status:gmatch("[^\r\n]+") do
     -- Git porcelain format: XY PATH or XY ORIG_PATH -> PATH
@@ -225,27 +338,27 @@ function _G.run_rubocop_on_modified_files()
     if status and file then
       -- Remove leading/trailing whitespace
       file = file:match("^%s*(.-)%s*$")
-      
+
       -- Check if it's a Ruby file
       if file:match("%.rb$") then
         table.insert(ruby_files, file)
       end
     end
   end
-  
+
   if #ruby_files == 0 then
     vim.notify("No modified Ruby files found", vim.log.levels.INFO)
     return
   end
-  
+
   -- Build the rubocop command
   local rubocop_cmd = "rubocop -A " .. table.concat(ruby_files, " ")
-  
+
   -- Run rubocop
   vim.notify("Running: " .. rubocop_cmd, vim.log.levels.INFO)
-  
+
   local result = vim.fn.system(rubocop_cmd)
-  
+
   if vim.v.shell_error == 0 then
     vim.notify("Rubocop completed successfully", vim.log.levels.INFO)
     -- Reload the current buffer if it's one of the modified files
