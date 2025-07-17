@@ -69,8 +69,8 @@ map("n", "<Leader>if", "magg=G`a", opts)
 
 -- Edit configuration files
 map("n", "<Leader>eg", ":vsp ~/.gitconfig<CR>", opts)
-map("n", "<Leader>ev", ":tabe ~/.dotfiles/init.lua<CR>", opts)
-map("n", "<Leader>sv", ":source ~/.dotfiles/init.lua<CR>", opts)
+map("n", "<Leader>ev", ":tabe ~/.config/nvim/init.lua<CR>", opts)
+map("n", "<Leader>sv", ":source ~/.config/nvim/init.lua<CR>", opts)
 
 -- File operations
 map("n", "<Leader>pl", ":tabe playground.sql<CR>", opts)
