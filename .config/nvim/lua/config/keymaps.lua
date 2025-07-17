@@ -142,4 +142,8 @@ map("n", "<Leader>cr", function()
   vim.notify("Regenerating tags file...", vim.log.levels.INFO)
   vim.fn.system("ctags -R .")
   vim.notify("Tags file updated!", vim.log.levels.INFO)
-end, opts) 
+end, opts)
+
+-- Neo-tree file explorer
+map("n", "<C-p>", "<cmd>Neotree focus<cr>", opts)
+map("n", "<Leader>e", "<cmd>Neotree toggle<cr>", opts) 
