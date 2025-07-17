@@ -135,4 +135,11 @@ map("n", "<Leader>yf", function()
   local file_path = vim.fn.expand("%:p")
   vim.fn.setreg("+", file_path)
   vim.notify("Copied file path: " .. file_path, vim.log.levels.INFO)
+end, opts)
+
+-- Regenerate tags file
+map("n", "<Leader>cr", function()
+  vim.notify("Regenerating tags file...", vim.log.levels.INFO)
+  vim.fn.system("ctags -R .")
+  vim.notify("Tags file updated!", vim.log.levels.INFO)
 end, opts) 
