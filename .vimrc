@@ -431,8 +431,8 @@ nnoremap <leader>nfsd : Scratch()<CR>
 
 " Functions {{{
 "function! OpenTestOrSourceFile()
-ruby <<EOF
-EOF
+"ruby <<EOF
+"EOF
 "endfunction
 "
 
@@ -483,8 +483,8 @@ nnoremap <leader>ea :vsp $DOTFILES_PATH/.aliases<cr>
 
 " Source/edit vimrc, .bash_profile {{{
 " Source/edit vimrc
-nnoremap <leader>sv :source $MYVIMRC<cr>
-nnoremap <leader>ev :tabe $MYVIMRC<CR>
+" nnoremap <leader>sv :source $MYVIMRC<cr>
+" nnoremap <leader>ev :tabe $MYVIMRC<CR>
 
 " Source/edit .bash_profile
 nnoremap <leader>sb :!source ~/.zshrc<cr>
@@ -1350,10 +1350,8 @@ augroup Python
   " Add multi-line single-quote string literal
   autocmd Filetype python nnoremap <buffer> <Leader>ml' o'''<CR><CR>'''<Up><Esc>A
 
-  autocmd Filetype python vnoremap <buffer> <Leader>/ :call Comment("#")<CR>
   autocmd Filetype python vnoremap <buffer> <Leader>tr ctry:<CR>except Exception as e:<CR>import pdb; pdb.set_trace()<Esc><Up>PV/except<CR><Up>=/except<CR>2==
   autocmd Filetype python nnoremap <buffer> <Leader>dt V/except<CR><Up>o<Down><?try<CR>dd/except<CR>2dd
-  autocmd Filetype python nnoremap <buffer> <Leader>/ :call Comment("#")<CR>
   autocmd Filetype python nnoremap <buffer> <Leader>p ^c$print "<Esc>p$a"<Esc>oprint <Esc>poprint "\n"<CR>
 
   autocmd Filetype python setlocal tabstop=8 expandtab softtabstop=4 shiftwidth=4

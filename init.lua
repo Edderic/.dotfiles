@@ -193,6 +193,12 @@ vim.keymap.set('v', '<leader>/', toggle_comment, {desc = "Toggle comment"})
 -- Normal mode: <leader>/ to toggle comment on current line
 vim.keymap.set('n', '<leader>/', toggle_comment, {desc = "Toggle comment"})
 
--- Debug version (temporary)
-vim.keymap.set('v', '<leader>d', toggle_comment_debug, {desc = "Debug toggle comment"})
-vim.keymap.set('n', '<leader>d', toggle_comment_debug, {desc = "Debug toggle comment"})
+-- Source init.lua file
+vim.keymap.set('n', '<leader>sv', function()
+  vim.cmd('source ~/.dotfiles/init.lua')
+end, {desc = "Source init.lua"})
+
+-- Edit init.lua file
+vim.keymap.set('n', '<leader>ev', function()
+  vim.cmd('tabe ~/.dotfiles/init.lua')
+end, {desc = "Edit init.lua"})
