@@ -299,17 +299,17 @@ if executable('ag')
 set grepprg=ag\ --nogroup\ --nocolor
 
 " Use ag in CTRL-P for listing files, Lightning fast and respects .gitignore
-let g:ctrlp_user_command = 'ag %s -l --nocolor -g ""'
+let g:ctrlp_user_command = 'ag %s -l --nocolor -g "" -U --skip-vcs-ignores --ignore="*data*" --ignore="tags"'
 
 " ag is fast enough that CtrlP doesn't need to cache
-let g:ctrlp_use_caching = 0
+let g:ctrlp_use_caching = 1
 endif
 
 " Map K to search the word underneath the cursor and return results in a new
 " window.
 nnoremap K :grep! "\b<C-R><C-W>\b"<CR>:cw<CR>
 
-nnoremap \ :Ag<SPACE>
+nnoremap \ :Ag<SPACE>--ignore="*data*" --ignore="tags"<Space>
 " }}}
 
 " General {{{
@@ -320,7 +320,7 @@ let mapleader = "\<Space>"
 
 " pasting from clipboard without mangling text
 nnoremap <Leader>pa :set invpaste paste?<CR>
-set pastetoggle=<F2>
+" set pastetoggle=<F2>
 set showmode
 
 nnoremap <Leader>fp :let @" = expand("%")<cr>
@@ -435,216 +435,13 @@ ruby <<EOF
 EOF
 "endfunction
 "
-function! RunSqlFile(...)
-ruby <<EOF
-split_or_tab = Vim::evaluate('a:1')
 
-
-def run_sql_file
-  relative_path = Vim.evaluate('@%')
-
-  filename = '.edderic-config.json'
-  require File.expand_path("#{ENV['DOTFILES_PATH']}/lib/config.rb", __FILE__)
-
-  config = Config.new.maybe_create_then_read_config(filename)
-  if config['psql_database']
-    database = config['psql_database']
-  else
-    database = 'lingolive'
-  end
-
-  output =  `psql -d #{database} -f #{relative_path}`
-end
-
-def run_and_display_sql(split_or_tab)
-  Vim.command(':w')
-
-  # save the file
-  File.open('sql_buffer_output', 'wb') do |f|
-    f.write run_sql_file
-  end
-
-  # Open vertical split
-  Vim.command(':bdelete sql_buffer_output')
-  if split_or_tab == 'split'
-    Vim.command(':vsp sql_buffer_output')
-  else
-    Vim.command(':tabe sql_buffer_output')
-  end
-end
-
-# run_and_display_sql(split_or_tab)
-EOF
-endfunction
-
-function! GenerateFilePair()
-ruby <<EOF
-
-relative_path = Vim.evaluate('@%')
-
-def transform_to_spec_path(path)
-  dir_args = path.split('/')
-
-  spec_args = dir_args.clone()
-  spec_args[0] = 'spec'
-  last = dir_args.last.split('.')
-
-  spec_args[spec_args.size - 1] = "#{last.first}_spec.#{last.last}"
-  spec_args_without_file = spec_args[0...spec_args.size - 1]
-
-  Vim.command(":!mkdir -p #{spec_args_without_file.join('/')}")
-  Vim.command(":vsp #{spec_args.join('/')}")
-end
-
-transform_to_spec_path(relative_path)
-EOF
-endfunction
-
-" Send a subset (command) of one line
 function! VtrSendVisuallySelectedCommand()
-ruby <<EOF
-command = Vim.evaluate("getline(\"'<\")[getpos(\"'<\")[2]-1:getpos(\"'>\")[2]-1]")
-Vim.command("call VtrSendCommand('#{command}')")
-EOF
+" ruby <<EOF
+" command = Vim.evaluate("getline(\"'<\")[getpos(\"'<\")[2]-1:getpos(\"'>\")[2]-1]")
+" Vim.command("call VtrSendCommand('#{command}')")
+" EOF
 endfunction
-
-" Useful for debugging
-function! AddDebugLineToEachMethod()
-ruby <<EOF
-  index = 1
-  while index < Vim::Buffer.current.length
-    line = Vim::Buffer.current[index]
-    if line.scan(/def +/).any?
-      pre_def_whitespace = line.scan(/\s+(?=def )/)[0]
-      debug_line = "#{pre_def_whitespace}  require 'pry'; binding.pry"
-      Vim::Buffer.current.append(index, debug_line)
-    end
-
-    index += 1
-  end
-EOF
-endfunction
-
-" Open the test if source file and vice versa.
-function! OpenAssociatedFile()
-ruby <<EOF
-old_path = Vim::Buffer.current.name
-base_name = File.basename(old_path)
-spec = !!base_name.match('spec.rb')
-if spec
-  filepath_to_open = old_path.gsub('_spec', '').gsub('spec', 'lib')
-else
-  old_directory = File.dirname(old_path)
-  filepath_to_open = old_directory.gsub('lib', 'spec') + "/" + base_name.gsub('.rb', '_spec.rb')
-end
-
-Vim.command(":vsp #{filepath_to_open}")
-EOF
-endfunction
-
-function! RunRSpecDirOfCurrentBuffer()
-ruby <<EOF
-old_path = Vim::Buffer.current.name
-directory = File.dirname(old_path)
-Vim.command("call VtrSendCommand('spring rspec #{directory}')")
-# Vim.command("call VtrSendCommand('rspec #{directory}')")
-EOF
-endfunction
-
-function! StartupSpringRSpec()
-ruby <<EOF
-require 'json'
-
-filename = '.edderic-config.json'
-require File.expand_path("#{ENV['DOTFILES_PATH']}/lib/config.rb", __FILE__)
-
-config = Config.new.maybe_create_then_read_config(filename)
-
-if config['spring_rspec']
-  Vim.command("let g:rspec_command = \"call VtrSendCommand('spring rspec {spec}')\"")
-else
-  Vim.command("let g:rspec_command = \"call VtrSendCommand('rspec {spec}')\"")
-end
-
-EOF
-endfunction
-
-function! ToggleSpringRspec()
-ruby <<EOF
-require 'json'
-
-filename = '.edderic-config.json'
-require File.expand_path("~/.edderic-dotfiles/lib/config.rb", __FILE__)
-
-
-config = Config.new.maybe_create_then_read_config(filename)
-new_config = config.clone
-new_val = !config['spring_rspec']
-
-new_config['spring_rspec'] = new_val
-puts new_config
-File.open(filename, 'w') do |f|
-  f.write(JSON.pretty_generate(new_config))
-end
-
-if new_val
-  Vim.command("let g:rspec_command = \"call VtrSendCommand('spring rspec {spec}')\"")
-else
-  Vim.command("let g:rspec_command = \"call VtrSendCommand('rspec {spec}')\"")
-end
-
-EOF
-endfunction
-
-function! KillSpring()
-ruby <<EOF
-t = `ps aux |grep spring`
-puts t.
-  split("\n").
-  reject{|i| i.scan(/grep/).any? }.
-  map{|col| col.split(" ")[1]}.
-  each{|id| `kill -9 #{id}`}
-EOF
-endfunction
-
-function! RenameFile()
-ruby <<EOF
-  old_path = Vim::Buffer.current.name
-  directory = File.dirname(old_path)
-  command = ":!mv % #{directory}/"
-  new_file_name = ruby_input(command)
-  new_path = "#{directory}/#{new_file_name}"
-
-  sure = ruby_input("\nAre you sure you want to rename the former to the latter? [y/n]\n\t#{old_path}\n\t#{new_path}\n")
-
-  if sure == 'y'
-    Vim.command("execute 'normal! #{command}#{new_file_name}\e'")
-    Vim.command("execute 'normal! :e! #{new_path}\e'")
-    puts "\nSuccessfully renamed!"
-  else
-    puts "\nCanceled the renaming..."
-  end
-EOF
-
-endfunction
-
-function! DefRuby()
-ruby << EOF
-def ruby_input(message = 'input')
-  Vim.command('call inputsave()')
-  Vim.command("let user_input = input('" + message + ": ')")
-  Vim.command('call inputrestore()')
-  return Vim.evaluate('user_input')
-end
-def demo()
-  curline = Vim::Buffer.current.line
-  name = ruby_input("A\nB")
-  Vim::Buffer.current.line = curline + ' ' + name
-end
-EOF
-endfunction
-
-call DefRuby()
 
 function! Scratch()
   :new<CR>
@@ -660,193 +457,6 @@ function! ScratchMarkdown()
   setlocal bufhidden=hide
   setlocal noswapfile
 endfunction
-
-function! RubyInfo()
-ruby <<EOF
-puts RUBY_VERSION
-puts RUBY_PLATFORM
-puts RUBY_RELEASE_DATE
-EOF
-endfunction
-
-
-function! Stuff()
-ruby <<EOF
-require File.expand_path("~/.vim_ruby_helpers/Test.rb", __FILE__)
-puts Test.new.class
-EOF
-endfunction
-
-function! TestBaseName()
-ruby <<EOF
-  old_path = Vim::Buffer.current.name
-  directory = File.dirname(old_path)
-  command = ":e #{directory}/"
-  new_file_name = ruby_input(command)
-  # maybe add options here ()
-  new_path = "#{directory}/#{new_file_name}"
-  Vim.command(":e #{new_path}")
-
-#if File.directory?(old_path)
-  # then save here
-  #else
-  # then move up and save
-  #end
-EOF
-endfunction
-
-function! Delete(...)
-ruby <<EOF
-current_buffer = Vim::Buffer.current
-pry_match = Vim::evaluate('a:1')
-indices = (1..current_buffer.length).inject([]) do |indices, index|
-  line = current_buffer[index]
-  if line.match(pry_match)
-    indices << index
-  end
-
-  indices
-end
-
-indices.reverse.each do |index|
-  current_buffer.delete(index)
-end
-
-EOF
-endfunction
-
-function! Toggle(...)
-ruby <<EOF
-current_buffer = Vim::Buffer.current
-pry_match = Vim::evaluate('a:1')
-(1..current_buffer.length).each do |index|
-  line = current_buffer[index]
-  commented_pry_match = "# #{pry_match}"
-  if line.match(commented_pry_match)
-    current_buffer[index] = line.gsub(commented_pry_match, pry_match)
-  elsif line.match(pry_match)
-    current_buffer[index] = line.gsub(pry_match, commented_pry_match)
-  end
-end
-EOF
-endfunction
-
-function! Comment(...)
-ruby <<EOF
-args_length = Vim::evaluate('a:0')
-start_tag = Vim::evaluate('a:1')
-end_tag = Vim::evaluate('a:2') if args_length == 2
-require File.expand_path("#{ENV['DOTFILES_PATH']}/lib/line", __FILE__)
-line_string = Vim::Buffer.current.line
-line = Line.new(line_string, start_tag, end_tag)
-
-Vim::Buffer.current.line = line.toggle_comment
-EOF
-endfunction
-
-function! JavaScriptBlockComment(...)
-ruby <<EOF
-# puts Vim::evaluate("'<")
-EOF
-endfunction
-
-function! SeparateCommaSeparatedValuesIntoLines()
-ruby <<EOF
-current_buffer = Vim::Buffer.current
-current_line = current_buffer.line
-items = current_line.split(",")
-current_line_number = current_buffer.line_number
-items.each_with_index do |item, index|
-at_the_end = index == items.length - 1
-  if at_the_end
-    item = item
-  else
-    item = "#{item},"
-  end
-  current_buffer.append(current_line_number + index, item)
-end
-
-current_buffer.delete(current_line_number)
-EOF
-endfunction
-
-function! DoEndifyCurlyBraces()
-ruby <<EOF
-current_line = Vim::Buffer.current.line
-curlyBracesWithBar = /{.+\|.+}/
-if current_line.match(curlyBracesWithBar)
-  Vim.command('execute "normal! ?{\\rsdo \ef\\|;a\\r\e/}\\rs\\rend\e"')
-else
-  Vim.command('execute "normal! ?{\\rsdo\\r\e/}\\rs\\rend\e"')
-end
-EOF
-endfunction
-
-function! AddCharStringAsLongAsHeaderString(char)
-ruby <<EOF
-  character = Vim::evaluate('a:char')
-  current_line = Vim::Buffer.current.line
-  current_line.gsub(/\s*$/,'')
-  current_line_length = current_line.length
-
-  accumulated_string = '' + character * current_line_length
-
-  Vim.command("execute 'normal! o#{accumulated_string}\e'")
-EOF
-endfunction
-
-function! WrapLineWith(opening_char, closing_char, concatenate_char)
-ruby <<EOF
-  open_char = Vim::evaluate('a:opening_char')
-  close_char = Vim::evaluate('a:closing_char')
-  concat_char = Vim::evaluate('a:concatenate_char')
-  Vim.command("normal! I#{open_char}\eA#{close_char}#{concat_char}\e")
-EOF
-endfunction
-
-function! WrapWordWith(opening_char, closing_char, word)
-ruby <<EOF
-opening_char = Vim::evaluate('a:opening_char')
-closing_char = Vim::evaluate('a:closing_char')
-word = Vim::evaluate('a:word')
-
-if word == 'w'
-  go_to_end_of_word = 'e'
-  go_to_start_of_word = 'b'
-elsif word == 'W'
-  go_to_end_of_word = 'E'
-  go_to_start_of_word = 'B'
-end
-
-Vim.command("normal! vi#{word}\e#{go_to_start_of_word}i#{opening_char}\el#{go_to_end_of_word}a#{closing_char}")
-EOF
-endfunction
-
-function! WrapSelectionWith(opening_char, closing_char)
-ruby <<EOF
-opening_char = Vim::evaluate('a:opening_char')
-closing_char = Vim::evaluate('a:closing_char')
-
-Vim.command("normal! \e`<i#{opening_char}\e`>la#{closing_char}")
-EOF
-endfunction
-
-function! ToggleMark()
-ruby <<EOF
-  line = VIM::Buffer.current.line
-  if line.match(/\[ \]/)
-    line.sub!(/\[ \]/, "[x]")
-  elsif line.match(/\[x\]/)
-    line.sub!(/\[x\]/, "[ ]")
-  else
-    line = line.prepend("  [ ] ")
-  end
-
-  VIM::Buffer.current.line = line
-EOF
-endfunction
-
-" }}}
 
 " Vertically space out really long horizontal lines
 nnoremap <leader>, :call SeparateCommaSeparatedValuesIntoLines()<cr>
@@ -890,7 +500,7 @@ nnoremap <leader>ep :vsp ~/.pgit.rc.yml<cr>
 nnoremap <Leader>gd :Gdiff<CR>
 nnoremap <Leader>gdc :Git diff --cached<CR>
 nnoremap <Leader>gca :Git commit --amend<CR>
-nnoremap <Leader>gb :Gblame<CR>
+nnoremap <Leader>gb :Git blame<CR>
 nnoremap <Leader>gst :Gstatus<CR>
 nnoremap <Leader>gcm :Gcommit<CR>
 nnoremap <Leader>ggr :Ggrep<CR>
@@ -1110,7 +720,7 @@ onoremap il{ :<C-u>normal! F}va{<Cr>
 " }}}
 
 "
-nnoremap <Leader>cr :!ctags -R .<cr>
+nnoremap <Leader>cr :!ctags  --recurse=yes --exclude=.git --exclude=BUILD --exclude=.svn --exclude=@.ctagsignore<cr>
 
 " Open playground
 nnoremap <Leader>pl :tabe playground.sql<CR>
@@ -1123,6 +733,7 @@ nnoremap <Leader>ks :call KillSpring()<CR>
 
 augroup RSpec
   autocmd!
+  autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> su' isubject do<CR>end<Esc>k2==o
   autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> de' describe "" do<CR>end<Esc>k2==f"li
   autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> co' context "" do<CR>end<Esc>k2==f"li
   autocmd BufNewFile,BufRead *spec.rb inoremap <buffer> it'' it "" do<CR>end<Esc>k2==f"li
@@ -1391,6 +1002,7 @@ augroup end
 
 augroup SCAD
   autocmd!
+  autocmd BufNewFile,BufRead *.scad nnoremap <buffer> <Leader>us iuse <><Left>
   autocmd BufNewFile,BufRead *.scad nnoremap <buffer> <Leader>cu icube([x,y,z]);<Esc>==
   autocmd BufNewFile,BufRead *.scad nnoremap <buffer> <Leader>cy icylinder(h=x, r=y);<Esc>==
   autocmd BufNewFile,BufRead *.scad nnoremap <buffer> <Leader>tr itranslate([x,y,z])<Space>{<CR><CR>}<Up><Up><Esc>3==
@@ -1712,10 +1324,23 @@ augroup Vue
 
 augroup end
 
+function! RunBlack()
+  if executable('black')
+    silent !black %
+    if v:shell_error
+      echo "Black formatting failed"
+    endif
+  else
+    echo "Black not found. Install with: pip install black"
+  endif
+endfunction
 
 " Python Filetype settings {{{
 augroup Python
   autocmd!
+" Run Black on Python files when saving (with error handling)
+  autocmd BufWritePost *.py call RunBlack()
+  autocmd Filetype python nnoremap <buffer> <Leader>lp O@line_profiler.profile<Esc>
   autocmd Filetype python nnoremap <buffer> <Leader>db Oimport pdb; pdb.set_trace()<Esc>
   autocmd Filetype python nnoremap <buffer> <Leader>ddb :call Delete("import pdb; pdb.set_trace()")<CR>
   autocmd Filetype python nnoremap <buffer> <Leader>tdb :call Toggle("import pdb; pdb.set_trace()")<CR>
@@ -1746,12 +1371,12 @@ augroup Python
   autocmd Filetype python inoremap <buffer> if' if<Space>:<Left>
 
   " try-except
-  autocmd Filetype python inoremap <buffer> tr' try<Space>:<CR>except<Space>(Exception):<Esc>O
+  autocmd Filetype python inoremap <buffer> tr' try<Space>:<CR>except<Space>Exception as e:<Esc>O
 augroup end
 
 augroup PyTest
   autocmd!
-  autocmd BufNewFile,BufRead *test.py nnoremap <buffer> <Leader>fo O@pytest.mark.f<Esc>
+  autocmd BufNewFile,BufRead *test*.py nnoremap <buffer> <Leader>fo O@pytest.mark.f<Esc>
 augroup end
 
 augroup Mamba
