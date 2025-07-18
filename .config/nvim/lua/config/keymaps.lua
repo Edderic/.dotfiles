@@ -150,4 +150,11 @@ end, opts)
 
 -- Neo-tree file explorer
 map("n", "<C-p>", "<cmd>Neotree focus<cr>", opts)
-map("n", "<Leader>e", "<cmd>Neotree toggle<cr>", opts) 
+map("n", "<Leader>e", "<cmd>Neotree toggle<cr>", opts)
+
+-- Telescope search keymaps
+map("n", "\\", "<cmd>Telescope live_grep<cr>", opts)
+map("n", "<Leader>ff", "<cmd>Telescope find_files<cr>", opts)
+map("n", "<Leader>fg", "<cmd>Telescope live_grep<cr>", opts)
+map("n", "<Leader>fb", "<cmd>Telescope buffers<cr>", opts)
+map("n", "<Leader>fh", "<cmd>Telescope help_tags<cr>", opts) 
